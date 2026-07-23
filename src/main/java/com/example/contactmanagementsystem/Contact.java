@@ -55,68 +55,68 @@ public class Contact {
         return id;
     }
 
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
     public User getUser() {
         return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getFirstName() {
         return firstName;
     }
 
-    public String getLastName() {
-        return lastName;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public Timestamp getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public List<Email> getEmails() {
-        return emails;
-    }
-
-    public List<Phone> getPhones() {
-        return phones;
-    }
-
-    public void setId(Integer id){
-        this.id = id;
-    }
-
-    public void setUser(User user){
-        this.user = user;
-    }
-
     public void setFirstName(String firstName) {
         this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
     }
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
     }
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
 
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
     }
 
+    public List<Email> getEmails() {
+        return emails;
+    }
+
     public void setEmails(List<Email> emails) {
         this.emails = emails;
+    }
+
+    public List<Phone> getPhones() {
+        return phones;
     }
 
     public void setPhones(List<Phone> phones) {
