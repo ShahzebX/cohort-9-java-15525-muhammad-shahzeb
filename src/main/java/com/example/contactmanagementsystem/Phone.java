@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 public class Phone {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne
@@ -29,9 +30,8 @@ public class Phone {
             Integer phoneNumber,
             String label,
             Timestamp createdAt,
-            Timestamp updatedAt
-    )
-    {
+            Timestamp updatedAt) {
+
         this.id = id;
         this.contact = contact;
         this.phoneNumber = phoneNumber;
