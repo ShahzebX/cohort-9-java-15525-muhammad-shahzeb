@@ -16,7 +16,7 @@ public class Phone {
     @JoinColumn(name = "contact_id")
     private Contact contact;
 
-    private Integer phoneNumber;
+    private String phoneNumber;
     private String label;
     private Timestamp createdAt;
     private Timestamp updatedAt;
@@ -27,7 +27,7 @@ public class Phone {
     public Phone(
             Integer id,
             Contact contact,
-            Integer phoneNumber,
+            String phoneNumber,
             String label,
             Timestamp createdAt,
             Timestamp updatedAt) {
@@ -56,11 +56,11 @@ public class Phone {
         this.contact = contact;
     }
 
-    public Integer getPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(Integer phoneNumber) {
+    public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 

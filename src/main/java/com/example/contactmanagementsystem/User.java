@@ -3,6 +3,7 @@
     import jakarta.persistence.*;
 
     import java.sql.Timestamp;
+    import java.util.List;
 
     @Entity
     @Table(name = "user")
@@ -10,6 +11,9 @@
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Integer id;
+
+        @OneToMany(mappedBy = "user")
+        private List<Contact> contacts;
 
         private String firstName;
         private String lastName;
@@ -49,6 +53,14 @@
 
         public void setId(Integer id) {
             this.id = id;
+        }
+
+        public List<Contact> getContacts() {
+            return contacts;
+        }
+
+        public void setContacts(List<Contact> contacts) {
+            this.contacts = contacts;
         }
 
         public String getFirstName() {
