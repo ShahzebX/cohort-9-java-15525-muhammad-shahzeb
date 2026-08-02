@@ -1,9 +1,9 @@
 package com.example.contactmanagementsystem;
 
 import jakarta.persistence.*;
-import org.hibernate.engine.internal.Cascade;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,10 +24,10 @@ public class Contact {
     private Timestamp updatedAt;
 
     @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Email> emails;
+    private List<Email> emails = new ArrayList<>();
 
     @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Phone> phones;
+    private List<Phone> phones = new ArrayList<>();
 
 
 
