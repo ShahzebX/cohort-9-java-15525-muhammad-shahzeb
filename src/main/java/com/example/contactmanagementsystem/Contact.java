@@ -1,6 +1,7 @@
 package com.example.contactmanagementsystem;
 
 import jakarta.persistence.*;
+import org.hibernate.engine.internal.Cascade;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -22,10 +23,10 @@ public class Contact {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    @OneToMany(mappedBy = "contact")
+    @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Email> emails;
 
-    @OneToMany(mappedBy = "contact")
+    @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Phone> phones;
 
 
