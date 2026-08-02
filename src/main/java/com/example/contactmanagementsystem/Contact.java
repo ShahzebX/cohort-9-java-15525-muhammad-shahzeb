@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "contact")
@@ -53,6 +54,11 @@ public class Contact {
     }
 
     public void addEmail(Email email){
+        Objects.requireNonNull(email, "email must not be null");
+
+        if (email.getContact() != null)
+            throw new IllegalStateException("Email is already assigned to a contact");
+
         emails.add(email);
         email.setContact(this);
     }
@@ -63,6 +69,12 @@ public class Contact {
     }
 
     public void addPhone(Phone phone){
+        Objects.requireNonNull(phone, "phone number must not be null");
+
+        if(phone.getContact() != null)
+            throw new IllegalStateException("Phone is already assigned to a contact");
+
+
         phones.add(phone);
         phone.setContact(this);
     }
