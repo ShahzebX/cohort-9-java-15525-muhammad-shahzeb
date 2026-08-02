@@ -52,6 +52,26 @@ public class Contact {
         this.updatedAt = updatedAt;
     }
 
+    public void addEmail(Email email){
+        emails.add(email);
+        email.setContact(this);
+    }
+
+    public void removeEmail(Email email){
+        emails.remove(email);
+        email.setContact(null);
+    }
+
+    public void addPhone(Phone phone){
+        phones.add(phone);
+        phone.setContact(this);
+    }
+
+    public void removePhone(Phone phone){
+        phones.remove(phone);
+        phone.setContact(null);
+    }
+
     public Integer getId() {
         return id;
     }
