@@ -3,7 +3,9 @@ package com.example.contactmanagementsystem;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "contact")
@@ -22,11 +24,11 @@ public class Contact {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    @OneToMany(mappedBy = "contact")
-    private List<Email> emails;
+    @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Email> emails = new ArrayList<>();
 
-    @OneToMany(mappedBy = "contact")
-    private List<Phone> phones;
+    @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Phone> phones = new ArrayList<>();
 
 
 
@@ -49,6 +51,37 @@ public class Contact {
         this.title = title;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public void addEmail(Email email){
+        Objects.requireNonNull(email, "email must not be null");
+
+        if (email.getContact() != null)
+            throw new IllegalStateException("Email is already assigned to a contact");
+
+        emails.add(email);
+        email.setContact(this);
+    }
+
+    public void removeEmail(Email email){
+        emails.remove(email);
+        email.setContact(null);
+    }
+
+    public void addPhone(Phone phone){
+        Objects.requireNonNull(phone, "phone number must not be null");
+
+        if(phone.getContact() != null)
+            throw new IllegalStateException("Phone is already assigned to a contact");
+
+
+        phones.add(phone);
+        phone.setContact(this);
+    }
+
+    public void removePhone(Phone phone){
+        phones.remove(phone);
+        phone.setContact(null);
     }
 
     public Integer getId() {
