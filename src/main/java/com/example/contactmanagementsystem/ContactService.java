@@ -30,6 +30,7 @@ public class ContactService {
 
     public Contact updateContact(Integer id, Contact updatedData){
         Optional<Contact> contact = contactRepository.findById(id);
-        return contactRepository.save()
+        return null;
+//        TEMPRORARY
     }
 }
