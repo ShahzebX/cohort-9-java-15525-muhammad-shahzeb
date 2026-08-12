@@ -29,7 +29,6 @@
     <properties>
         <java.version>21</java.version>
         <sonar.organization>shahzebx</sonar.organization>
-        <sonar.projectKey>cohort-9-java-15525-muhammad-shahzeb</sonar.projectKey>
     </properties>
 
     <dependencies>
