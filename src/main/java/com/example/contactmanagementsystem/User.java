@@ -1,6 +1,8 @@
     package com.example.contactmanagementsystem;
 
     import jakarta.persistence.*;
+    import org.hibernate.annotations.CreationTimestamp;
+    import org.hibernate.annotations.UpdateTimestamp;
 
     import java.sql.Timestamp;
     import java.util.List;
@@ -25,7 +27,11 @@
         private String phone;
 
         private String passwordHash;
+
+        @CreationTimestamp
         private Timestamp createdAt;
+
+        @UpdateTimestamp
         private Timestamp updatedAt;
 
         public User(){
@@ -112,15 +118,8 @@
             return createdAt;
         }
 
-        public void setCreatedAt(Timestamp createdAt) {
-            this.createdAt = createdAt;
-        }
-
         public Timestamp getUpdatedAt() {
             return updatedAt;
         }
 
-        public void setUpdatedAt(Timestamp updatedAt) {
-            this.updatedAt = updatedAt;
-        }
     }
