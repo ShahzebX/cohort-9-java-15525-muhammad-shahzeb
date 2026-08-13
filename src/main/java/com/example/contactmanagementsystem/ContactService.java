@@ -1,10 +1,15 @@
 package com.example.contactmanagementsystem;
 
+import com.example.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ContactService {
@@ -29,9 +34,35 @@ public class ContactService {
     }
 
     public Contact updateContact(Integer id, Contact updatedData){
-        Optional<Contact> contact = contactRepository.findById(id);
-        return null;
-//        TEMPRORARY
+        Contact existingContact = contactRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Error: Contact does not exist!"));
 
+        existingContact.setFirstName(updatedData.getFirstName());
+        existingContact.setLastName(updatedData.getLastName());
+        existingContact.setTitle(updatedData.getTitle());
+
+        existingContact.getPhones().clear();
+        updatedData.getPhones()
+                .forEach(phone -> {
+            existingContact.addPhone(phone);
+                }
+        );
+
+        existingContact.getEmails().clear();
+        updatedData.getEmails().forEach(existingContact::addEmail);
+
+        existingContact.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
+
+        return contactRepository.save(existingContact);
     }
+
+    public List<Contact> searchContact(String query){
+        return contactRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(query, query);
+    }
+
+    public Page<Contact> getContactsPaginated(int page, int size){
+        Pageable pageable = PageRequest.of(page, size);
+        return contactRepository.findAll(pageable);
+    }
+
 }
