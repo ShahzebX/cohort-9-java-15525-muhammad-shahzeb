@@ -7,8 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -50,8 +48,6 @@ public class ContactService {
 
         existingContact.getEmails().clear();
         updatedData.getEmails().forEach(existingContact::addEmail);
-
-        existingContact.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
 
         return contactRepository.save(existingContact);
     }
