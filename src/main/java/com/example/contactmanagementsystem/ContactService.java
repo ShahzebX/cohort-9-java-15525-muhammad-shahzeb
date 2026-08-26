@@ -51,8 +51,6 @@ public class ContactService {
         existingContact.getEmails().clear();
         updatedData.getEmails().forEach(existingContact::addEmail);
 
-        existingContact.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
-
         return contactRepository.save(existingContact);
     }
 
@@ -61,6 +59,8 @@ public class ContactService {
     }
 
     public Page<Contact> getContactsPaginated(int page, int size){
+        if(size <= 0)
+            throw new IllegalArgumentException("Page size must be greater than 0");
         Pageable pageable = PageRequest.of(page, size);
         return contactRepository.findAll(pageable);
     }

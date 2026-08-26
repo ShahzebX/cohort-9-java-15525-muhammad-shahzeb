@@ -3,6 +3,7 @@ package com.example.contactmanagementsystem;
 import com.example.exception.DuplicateResourceException;
 import com.example.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,11 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public User registerUser(User user){
-        boolean noPhone = user.getPhone() == null || user.getPhone().isEmpty();
-        boolean noEmail = user.getEmail() == null || user.getEmail().isEmpty();
+        boolean noPhone = user.getPhone() == null || user.getPhone().isBlank();
+        boolean noEmail = user.getEmail() == null || user.getEmail().isBlank();
+
+        if (user.getPasswordHash() == null || user.getPasswordHash().isBlank())
+            throw new IllegalArgumentException("Password must not be blank");
 
         if (noPhone && noEmail)
             throw new IllegalArgumentException("User must register using either Email or Phone");
@@ -29,7 +33,11 @@ public class UserService {
 
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
 
-        return userRepository.save(user);
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateResourceException("Email or phone already in use.");
+        }
     }
 
     public User findByEmailOrPhone(String identifier){
@@ -39,6 +47,15 @@ public class UserService {
     }
 
     public void changePassword(Integer userId, String oldPassword, String newPassword){
+        if(newPassword.isBlank())
+            throw new IllegalArgumentException("New password cannot be blank");
+
+        if(oldPassword.isBlank())
+            throw new IllegalArgumentException("Old password cannot be blank");
+
+        if(newPassword.equals(oldPassword))
+            throw new IllegalArgumentException("New password cannot be the same as the old password");
+
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         boolean passwordMatch = passwordEncoder.matches(oldPassword, user.getPasswordHash());
 
@@ -46,6 +63,7 @@ public class UserService {
             throw new IllegalArgumentException("Old password is incorrect");
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+
         userRepository.save(user);
     }
 }
