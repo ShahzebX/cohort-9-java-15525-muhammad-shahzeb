@@ -33,7 +33,10 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build and analyze
+      - name: Build
+        run: mvn -B verify
+      - name: SonarQube analysis
+        if: ${{ secrets.SONAR_TOKEN != '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=ShahzebX_cohort-9-java-15525-muhammad-shahzeb
+        run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar

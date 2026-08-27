@@ -41,6 +41,9 @@ public class ContactService {
         existingContact.setLastName(updatedData.getLastName());
         existingContact.setTitle(updatedData.getTitle());
 
+        if (updatedData.getPhones() == null || updatedData.getEmails() == null)
+            throw new IllegalArgumentException("Phones and emails must not be null");
+
         existingContact.getPhones().clear();
         updatedData.getPhones()
                 .forEach(phone -> {
@@ -59,6 +62,8 @@ public class ContactService {
     }
 
     public Page<Contact> getContactsPaginated(int page, int size){
+        if(page < 0)
+            throw new IllegalArgumentException("Page number must not be negative");
         if(size <= 0)
             throw new IllegalArgumentException("Page size must be greater than 0");
         Pageable pageable = PageRequest.of(page, size);

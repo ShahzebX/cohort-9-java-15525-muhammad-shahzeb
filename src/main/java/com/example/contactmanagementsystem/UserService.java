@@ -2,20 +2,26 @@ package com.example.contactmanagementsystem;
 
 import com.example.exception.DuplicateResourceException;
 import com.example.exception.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLIntegrityConstraintViolationException;
+
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public User registerUser(User user){
+        if (user == null)
+            throw new IllegalArgumentException("User must not be null");
+
         boolean noPhone = user.getPhone() == null || user.getPhone().isBlank();
         boolean noEmail = user.getEmail() == null || user.getEmail().isBlank();
 
@@ -36,22 +42,33 @@ public class UserService {
         try {
             return userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateResourceException("Email or phone already in use.");
+            Throwable cause = e;
+            while (cause != null) {
+                if (cause instanceof SQLIntegrityConstraintViolationException) {
+                    throw new DuplicateResourceException("Email or phone already in use.");
+                }
+                cause = cause.getCause();
+            }
+            throw e;
         }
     }
 
     public User findByEmailOrPhone(String identifier){
+        if (identifier == null || identifier.isBlank())
+            throw new IllegalArgumentException("Identifier must not be blank");
+
         return userRepository.findByEmail(identifier)
                 .or(() -> userRepository.findByPhone(identifier))
                 .orElseThrow(() -> new ResourceNotFoundException("No user found with: " + identifier));
     }
 
     public void changePassword(Integer userId, String oldPassword, String newPassword){
-        if(newPassword.isBlank())
-            throw new IllegalArgumentException("New password cannot be blank");
-
-        if(oldPassword.isBlank())
+        if (userId == null)
+            throw new IllegalArgumentException("User ID must not be null");
+        if (oldPassword == null || oldPassword.isBlank())
             throw new IllegalArgumentException("Old password cannot be blank");
+        if (newPassword == null || newPassword.isBlank())
+            throw new IllegalArgumentException("New password cannot be blank");
 
         if(newPassword.equals(oldPassword))
             throw new IllegalArgumentException("New password cannot be the same as the old password");
@@ -64,6 +81,10 @@ public class UserService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
 
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateResourceException("Failed to update password.", e);
+        }
     }
 }
