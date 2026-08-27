@@ -24,7 +24,8 @@ public class ContactService {
     }
 
     public Contact getContactById(Integer id){
-        return contactRepository.findById(id).orElse(null);
+        return contactRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
     }
 
     public void deleteContact(Integer id){
