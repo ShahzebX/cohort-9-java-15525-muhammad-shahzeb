@@ -154,5 +154,6 @@ public class Contact {
     public void setPhones(List<Phone> phones) {
         this.phones = phones;
     }
+
 }
 

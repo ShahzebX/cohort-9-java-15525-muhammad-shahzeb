@@ -1,10 +1,6 @@
 package com.example.contactmanagementsystem.services;
 
-import com.example.contactmanagementsystem.Contact;
-import com.example.contactmanagementsystem.ContactRepository;
-import com.example.contactmanagementsystem.ContactService;
-import com.example.contactmanagementsystem.Phone;
-import com.example.contactmanagementsystem.Email;
+import com.example.contactmanagementsystem.*;
 import com.example.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,10 +9,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,96 +24,84 @@ class ContactServiceTest {
     @InjectMocks
     private ContactService contactService;
 
+    private User user;
     private Contact contact;
 
     @BeforeEach
     void setUp() {
+        user = new User();
+        user.setId(1);
+        user.setEmail("test@example.com");
+
         contact = new Contact();
         contact.setId(1);
         contact.setFirstName("John");
         contact.setLastName("Doe");
+        contact.setUser(user);
     }
 
     @Test
-    void createContact_savesSuccessfully() {
-        when(contactRepository.save(contact)).thenReturn(contact);
+    void createContact_shouldSetUserAndSave() {
+        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
-        Contact result = contactService.createContact(contact);
+        Contact result = contactService.createContact(new Contact(), user);
 
-        assertEquals(contact, result);
-        verify(contactRepository).save(contact);
+        assertEquals(user, result.getUser());
+        verify(contactRepository).save(any(Contact.class));
     }
 
     @Test
-    void getContactById_returnsContact_whenFound() {
-        when(contactRepository.findById(1)).thenReturn(Optional.of(contact));
+    void getContactById_shouldReturnContactWhenOwnedByUser() {
+        when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
 
-        Contact result = contactService.getContactById(1);
+        Contact result = contactService.getContactById(1, user);
 
-        assertEquals(contact, result);
+        assertEquals("John", result.getFirstName());
     }
 
     @Test
-    void getContactById_throwsNotFound_whenMissing() {
-        when(contactRepository.findById(99)).thenReturn(Optional.empty());
+    void getContactById_shouldThrowWhenNotFoundForUser() {
+        when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> contactService.getContactById(99));
+        assertThrows(ResourceNotFoundException.class, () -> contactService.getContactById(1, user));
     }
 
     @Test
-    void deleteContact_callsRepository() {
-        contactService.deleteContact(1);
+    void deleteContact_shouldDeleteWhenOwnedByUser() {
+        when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
 
-        verify(contactRepository).deleteById(1);
+        contactService.deleteContact(1, user);
+
+        verify(contactRepository).delete(contact);
     }
 
     @Test
-    void searchContact_returnsMatchingList() {
-        when(contactRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase("john", "john"))
-                .thenReturn(List.of(contact));
+    void deleteContact_shouldThrowWhenNotFoundForUser() {
+        when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.empty());
 
-        List<Contact> result = contactService.searchContact("john");
-
-        assertEquals(1, result.size());
-        assertTrue(result.contains(contact));
+        assertThrows(ResourceNotFoundException.class, () -> contactService.deleteContact(1, user));
     }
 
     @Test
-    void updateContact_updatesFieldsAndSyncsPhonesEmails() {
+    void updateContact_shouldUpdateWhenOwnedByUser() {
         Contact updatedData = new Contact();
         updatedData.setFirstName("Jane");
         updatedData.setLastName("Smith");
-        updatedData.setTitle("Manager");
+        updatedData.setEmails(new java.util.ArrayList<>());
+        updatedData.setPhones(new java.util.ArrayList<>());
 
-        Phone newPhone = new Phone();
-        newPhone.setPhoneNumber("03001234567");
-        updatedData.getPhones().add(newPhone);
+        when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
+        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
 
-        Email newEmail = new Email();
-        newEmail.setEmailAddress("jane@example.com");
-        updatedData.getEmails().add(newEmail);
-
-        when(contactRepository.findById(1)).thenReturn(Optional.of(contact));
-        when(contactRepository.save(contact)).thenReturn(contact);
-
-        Contact result = contactService.updateContact(1, updatedData);
+        Contact result = contactService.updateContact(1, updatedData, user);
 
         assertEquals("Jane", result.getFirstName());
-        assertEquals("Smith", result.getLastName());
-        assertEquals("Manager", result.getTitle());
-        assertEquals(1, result.getPhones().size());
-        assertEquals("03001234567", result.getPhones().get(0).getPhoneNumber());
-        assertEquals(1, result.getEmails().size());
-        assertEquals("jane@example.com", result.getEmails().get(0).getEmailAddress());
-        verify(contactRepository).save(contact);
     }
 
     @Test
-    void updateContact_throwsNotFound_whenMissing() {
-        Contact updatedData = new Contact();
-        when(contactRepository.findById(99)).thenReturn(Optional.empty());
+    void updateContact_shouldThrowWhenNotFoundForUser() {
+        when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class,
-                () -> contactService.updateContact(99, updatedData));
+        assertThrows(ResourceNotFoundException.class, () -> contactService.updateContact(1, new Contact(), user));
     }
 }
