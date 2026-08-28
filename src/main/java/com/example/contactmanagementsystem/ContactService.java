@@ -37,6 +37,9 @@ public class ContactService {
         Contact existingContact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Error: Contact does not exist!"));
 
+        if (updatedData == null)
+            throw new IllegalArgumentException("Updated data must not be null");
+
         existingContact.setFirstName(updatedData.getFirstName());
         existingContact.setLastName(updatedData.getLastName());
         existingContact.setTitle(updatedData.getTitle());
