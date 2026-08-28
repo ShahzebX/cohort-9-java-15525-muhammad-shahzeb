@@ -7,6 +7,7 @@ import com.example.contactmanagementsystem.dto.LoginRequest;
 import com.example.contactmanagementsystem.dto.RegisterRequest;
 import com.example.contactmanagementsystem.security.JwtUtil;
 import com.example.exception.InvalidCredentialsException;
+import com.example.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -43,12 +44,15 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest loginRequest) {
-        userService.findByEmailOrPhone(loginRequest.getIdentifier());
+        User user;
+        try {
+            user = userService.findByEmailOrPhone(loginRequest.getIdentifier());
+        } catch (ResourceNotFoundException e) {
+            throw new InvalidCredentialsException("Invalid credentials");
+        }
 
-        boolean match = passwordEncoder.matches(loginRequest.getPassword(), userService.findByEmailOrPhone(loginRequest.getIdentifier()).getPasswordHash());
-
-        if(!match)
-            throw new InvalidCredentialsException("Invalid credentials for identifier: " + loginRequest.getIdentifier());
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash()))
+            throw new InvalidCredentialsException("Invalid credentials");
 
         String token = jwtUtil.generateToken(loginRequest.getIdentifier());
 
