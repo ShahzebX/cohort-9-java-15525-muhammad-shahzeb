@@ -1,5 +1,6 @@
-package com.example.contactmanagementsystem;
+package com.example.contactmanagementsystem.services;
 
+import com.example.contactmanagementsystem.*;
 import com.example.exception.DuplicateResourceException;
 import com.example.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,8 @@ public class ContactService {
     @Autowired
     private ContactRepository contactRepository;
 
-    public Contact createContact(Contact contact){
+    public Contact createContact(Contact contact, User user){
+        contact.setUser(user);
         try {
             return contactRepository.save(contact);
         } catch (DataIntegrityViolationException e) {
@@ -27,24 +29,24 @@ public class ContactService {
         }
     }
 
-    public List<Contact> getAllContacts(){
-        return contactRepository.findAll();
+    public List<Contact> getAllContacts(User user){
+        return contactRepository.findByUser(user);
     }
 
-    public Contact getContactById(Integer id){
-        return contactRepository.findById(id)
+    public Contact getContactById(Integer id, User user){
+        return contactRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Error: Contact does not exist!"));
     }
 
-    public void deleteContact(Integer id){
-        if (!contactRepository.existsById(id))
-            throw new ResourceNotFoundException("Error: Contact does not exist!");
-        contactRepository.deleteById(id);
+    public void deleteContact(Integer id, User user){
+        Contact contact = contactRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Error: Contact does not exist!"));
+        contactRepository.delete(contact);
     }
 
     @Transactional
-    public Contact updateContact(Integer id, Contact updatedData){
-        Contact existingContact = contactRepository.findById(id)
+    public Contact updateContact(Integer id, Contact updatedData, User user){
+        Contact existingContact = contactRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Error: Contact does not exist!"));
 
         if (updatedData == null)
@@ -72,17 +74,17 @@ public class ContactService {
         return contactRepository.save(existingContact);
     }
 
-    public List<Contact> searchContact(String query){
-        return contactRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(query, query);
+    public List<Contact> searchContact(String query, User user){
+        return contactRepository.findByUserAndFirstNameContainingIgnoreCaseOrUserAndLastNameContainingIgnoreCase(user, query, user, query);
     }
 
-    public Page<Contact> getContactsPaginated(int page, int size){
+    public Page<Contact> getContactsPaginated(int page, int size, User user){
         if(page < 0)
             throw new IllegalArgumentException("Page number must not be negative");
         if(size <= 0)
             throw new IllegalArgumentException("Page size must be greater than 0");
         Pageable pageable = PageRequest.of(page, size);
-        return contactRepository.findAll(pageable);
+        return contactRepository.findByUser(user, pageable);
     }
 
 }

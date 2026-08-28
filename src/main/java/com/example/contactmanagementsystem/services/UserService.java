@@ -1,5 +1,7 @@
-package com.example.contactmanagementsystem;
+package com.example.contactmanagementsystem.services;
 
+import com.example.contactmanagementsystem.User;
+import com.example.contactmanagementsystem.UserRepository;
 import com.example.exception.DuplicateResourceException;
 import com.example.exception.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;

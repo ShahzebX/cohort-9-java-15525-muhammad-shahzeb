@@ -1,5 +1,6 @@
 package com.example.contactmanagementsystem;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -34,6 +35,7 @@ public class Email {
         this.email = email;
     }
 
+    @JsonIgnore
     public Contact getContact() {
         return contact;
     }
