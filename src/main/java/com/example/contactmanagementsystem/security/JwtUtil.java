@@ -15,14 +15,13 @@ import static io.jsonwebtoken.Jwts.builder;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}") 
-    private String secret;
+    private final SecretKey signingKey;
+    private final long expiration;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
-
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    public JwtUtil(@Value("${jwt.secret}") String secret,
+                   @Value("${jwt.expiration}") long expiration) {
+        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expiration = expiration;
     }
 
     public String generateToken(String subject) {
@@ -30,13 +29,13 @@ public class JwtUtil {
                .subject(subject)
                .issuedAt(new Date())
                .expiration(new Date(System.currentTimeMillis() + expiration))
-               .signWith(getSigningKey())
+               .signWith(signingKey)
                .compact();
     }
 
     public String extractSubject(String token) {
         return Jwts.parser()
-                .verifyWith(getSigningKey())
+                .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -46,7 +45,7 @@ public class JwtUtil {
     public boolean isTokenValid(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(getSigningKey())
+                    .verifyWith(signingKey)
                     .build()
                     .parseSignedClaims(token);
             return true;
