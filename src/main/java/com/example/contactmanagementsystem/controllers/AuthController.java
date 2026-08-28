@@ -4,6 +4,7 @@ import com.example.contactmanagementsystem.User;
 import com.example.contactmanagementsystem.services.UserService;
 import com.example.contactmanagementsystem.dto.AuthResponse;
 import com.example.contactmanagementsystem.dto.LoginRequest;
+import com.example.contactmanagementsystem.dto.RegisterRequest;
 import com.example.contactmanagementsystem.security.JwtUtil;
 import com.example.exception.InvalidCredentialsException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,14 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public AuthResponse register(@RequestBody User user) {
+    public AuthResponse register(@RequestBody RegisterRequest request) {
+        User user = new User();
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setPasswordHash(request.getPassword());
+
         userService.registerUser(user);
 
         String identifier = (user.getEmail() != null) ? user.getEmail() : user.getPhone();
