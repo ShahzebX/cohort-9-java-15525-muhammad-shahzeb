@@ -28,6 +28,7 @@ public class ContactController {
 
     @PostMapping
     public Contact createContact(@RequestBody Contact contact, Authentication authentication) {
+        contact.setId(null);
         User user = getAuthenticatedUser(authentication);
         return contactService.createContact(contact, user);
     }

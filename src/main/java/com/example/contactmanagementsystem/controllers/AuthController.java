@@ -36,7 +36,7 @@ public class AuthController {
 
         userService.registerUser(user);
 
-        String identifier = (user.getEmail() != null) ? user.getEmail() : user.getPhone();
+        String identifier = (user.getEmail() != null && !user.getEmail().isBlank()) ? user.getEmail() : user.getPhone();
         String token = jwtUtil.generateToken(identifier);
 
         return new AuthResponse(token, identifier);
