@@ -51,6 +51,26 @@ class ContactServiceTest {
     }
 
     @Test
+    void createContact_shouldLinkNestedEmailAndPhoneToContact() {
+        Email email = new Email();
+        email.setEmail("nested@example.com");
+        Phone phone = new Phone();
+        phone.setPhoneNumber("555-1234");
+
+        Contact newContact = new Contact();
+        newContact.setEmails(new java.util.ArrayList<>(java.util.List.of(email)));
+        newContact.setPhones(new java.util.ArrayList<>(java.util.List.of(phone)));
+
+        when(contactRepository.save(any(Contact.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Contact result = contactService.createContact(newContact, user);
+
+        assertSame(result, email.getContact());
+        assertSame(result, phone.getContact());
+        verify(contactRepository).save(newContact);
+    }
+
+    @Test
     void getContactById_shouldReturnContactWhenOwnedByUser() {
         when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
 

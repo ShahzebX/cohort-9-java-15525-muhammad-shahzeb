@@ -23,14 +23,18 @@ public class ContactService {
     public Contact createContact(Contact contact, User user){
         contact.setUser(user);
 
-        List<Email> emails = contact.getEmails() == null ? List.of() : contact.getEmails();
-        for (Email email : emails) {
-            contact.addEmail(email);
+        if (contact.getEmails() != null) {
+            List<Email> emails = new ArrayList<>(contact.getEmails());
+            for (Email email : emails) {
+                contact.addEmail(email);
+            }
         }
 
-        List<Phone> phones = contact.getPhones() == null ? List.of() : contact.getPhones();
-        for (Phone phone : phones) {
-            contact.addPhone(phone);
+        if (contact.getPhones() != null) {
+            List<Phone> phones = new ArrayList<>(contact.getPhones());
+            for (Phone phone : phones) {
+                contact.addPhone(phone);
+            }
         }
 
         try {
