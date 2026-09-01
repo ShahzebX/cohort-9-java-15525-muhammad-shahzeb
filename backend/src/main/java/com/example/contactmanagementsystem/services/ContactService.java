@@ -96,11 +96,18 @@ public class ContactService {
         if (containsNull(request.getEmails()))
             throw new IllegalArgumentException("Emails must not contain null values");
 
-        // Scalar fields are always applied when a request is present (partial
-        // presence of lists is preserved via null checks below).
-        existingContact.setFirstName(request.getFirstName());
-        existingContact.setLastName(request.getLastName());
-        existingContact.setTitle(request.getTitle());
+        // Apply scalar fields only when explicitly provided (null = omit), so
+        // stored values are preserved for omitted fields — same partial-update
+        // semantics as the nested collections below.
+        if (request.getFirstName() != null) {
+            existingContact.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            existingContact.setLastName(request.getLastName());
+        }
+        if (request.getTitle() != null) {
+            existingContact.setTitle(request.getTitle());
+        }
 
         // Replace a nested collection ONLY when explicitly provided; when omitted,
         // the existing associations are preserved (partial update).

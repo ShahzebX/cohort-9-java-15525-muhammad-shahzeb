@@ -16,6 +16,18 @@ import java.sql.SQLIntegrityConstraintViolationException;
 public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
+    private static String sanitizeForLog(String value) {
+        if (value == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            sb.append(Character.isISOControl(c) ? '?' : c);
+        }
+        return sb.toString();
+    }
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -48,7 +60,7 @@ public class UserService {
 
         try {
             User saved = userRepository.save(user);
-            logger.info("Registered new user id={} identifier={}", saved.getId(), identifier);
+            logger.info("Registered new user id={} identifier={}", saved.getId(), sanitizeForLog(identifier));
             return saved;
         } catch (DataIntegrityViolationException e) {
             Throwable cause = e;

@@ -208,6 +208,24 @@ class ContactServiceTest {
     }
 
     @Test
+    void updateContact_partialUpdate_shouldPreserveOmittedScalarFields() {
+        contact.setTitle("CTO");
+
+        // Update only the first name; omit lastName, title, and both lists.
+        ContactRequest updatedData = new ContactRequest();
+        updatedData.setFirstName("Jane");
+
+        when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
+        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+
+        Contact result = contactService.updateContact(1, updatedData, user);
+
+        assertEquals("Jane", result.getFirstName());
+        assertEquals("Doe", result.getLastName());
+        assertEquals("CTO", result.getTitle());
+    }
+
+    @Test
     void updateContact_nullElementInPhones_shouldThrowAndNotMutate() {
         Phone existingPhone = new Phone();
         existingPhone.setPhoneNumber("555-3333");
