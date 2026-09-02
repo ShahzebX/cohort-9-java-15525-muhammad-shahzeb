@@ -1,12 +1,28 @@
-const TOKEN_KEY = 'cms.token'
 const USER_KEY = 'cms.user'
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY)
+  // The bearer token is held in a server-set HttpOnly, Secure, SameSite cookie
+  // which JavaScript cannot read; it is sent automatically on each request via
+  // withCredentials. The presence of the non-sensitive session marker below
+  // reflects an active session.
+  return hasStoredUser() ? 'active' : null
+}
+
+function hasStoredUser() {
+  try {
+    return localStorage.getItem(USER_KEY) != null
+  } catch {
+    return false
+  }
 }
 
 export function getStoredUser() {
-  const raw = localStorage.getItem(USER_KEY)
+  let raw
+  try {
+    raw = localStorage.getItem(USER_KEY)
+  } catch {
+    return null
+  }
   if (!raw) return null
   try {
     return JSON.parse(raw)
@@ -16,11 +32,19 @@ export function getStoredUser() {
 }
 
 export function setSession(token, user) {
-  localStorage.setItem(TOKEN_KEY, token)
-  localStorage.setItem(USER_KEY, JSON.stringify(user ?? null))
+  // The token itself lives in the server-side HttpOnly cookie; only
+  // non-sensitive UI state is persisted in browser storage.
+  try {
+    localStorage.setItem(USER_KEY, JSON.stringify(user ?? null))
+  } catch {
+    /* ignore */
+  }
 }
 
 export function clearSession() {
-  localStorage.removeItem(TOKEN_KEY)
-  localStorage.removeItem(USER_KEY)
+  try {
+    localStorage.removeItem(USER_KEY)
+  } catch {
+    /* ignore */
+  }
 }

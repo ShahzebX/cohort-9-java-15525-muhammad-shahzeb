@@ -12,6 +12,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
   const oldPasswordRef = useRef(null)
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
-        onClose()
+        handleClose()
       }
     }
 
@@ -57,6 +58,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
     if (!validation.valid) return
 
     setSubmitting(true)
+    submittingRef.current = true
     try {
       await changePassword({ oldPassword, newPassword })
       resetFields()
@@ -65,11 +67,12 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
       setFormError(getApiError(error))
     } finally {
       setSubmitting(false)
+      submittingRef.current = false
     }
   }
 
   function handleClose() {
-    if (submitting) return
+    if (submittingRef.current) return
     resetFields()
     onClose()
   }
