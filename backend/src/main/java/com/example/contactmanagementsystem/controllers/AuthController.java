@@ -58,7 +58,7 @@ public class AuthController {
         logger.info("Registration successful for user: {}", sanitizeForLog(identifier));
         String token = jwtUtil.generateToken(identifier);
 
-        return new AuthResponse(token, identifier);
+        return new AuthResponse(token, identifier, user.getFirstName(), user.getLastName(), user.getEmail(), user.getPhone());
     }
 
     @PostMapping("/login")
@@ -79,7 +79,7 @@ public class AuthController {
         logger.info("Login successful for user: {}", sanitizeForLog(loginRequest.getIdentifier()));
         String token = jwtUtil.generateToken(loginRequest.getIdentifier());
 
-        return new AuthResponse(token, loginRequest.getIdentifier());
+        return new AuthResponse(token, loginRequest.getIdentifier(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getPhone());
     }
 
     @PostMapping("/change-password")

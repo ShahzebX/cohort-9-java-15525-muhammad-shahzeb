@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
@@ -79,10 +80,13 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_shouldReturnToken() throws Exception {
+    void login_shouldReturnProfileFields() throws Exception {
         com.example.contactmanagementsystem.User user = new com.example.contactmanagementsystem.User();
         user.setId(1);
+        user.setFirstName("Jane");
+        user.setLastName("Doe");
         user.setEmail("test@example.com");
+        user.setPhone("+15550001111");
         user.setPasswordHash("encoded");
 
         when(userService.findByEmailOrPhone("test@example.com")).thenReturn(user);
@@ -92,7 +96,13 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"identifier\":\"test@example.com\",\"password\":\"password123\"}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("mock-token"))
+                .andExpect(jsonPath("$.identifier").value("test@example.com"))
+                .andExpect(jsonPath("$.firstName").value("Jane"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.phone").value("+15550001111"));
     }
 
     @Test
