@@ -1,5 +1,6 @@
 package com.example.contactmanagementsystem;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
@@ -99,6 +100,7 @@ public class Contact {
         this.id = id;
     }
 
+    @JsonIgnore
     public User getUser() {
         return user;
     }

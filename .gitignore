@@ -87,3 +87,7 @@ frontend_build_spec.md
 
 **/SKILL.md
 **/skills.md
+.opencode/
+.agents/
+.impeccable/
+skills-lock.json

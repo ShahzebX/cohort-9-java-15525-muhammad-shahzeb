@@ -22,18 +22,6 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    private static String sanitizeForLog(String value) {
-        if (value == null) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder(value.length());
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            sb.append(Character.isISOControl(c) ? '?' : c);
-        }
-        return sb.toString();
-    }
-
     @Autowired
     private UserService userService;
 
@@ -55,7 +43,7 @@ public class AuthController {
         userService.registerUser(user);
 
         String identifier = (user.getEmail() != null && !user.getEmail().isBlank()) ? user.getEmail() : user.getPhone();
-        logger.info("Registration successful for user: {}", sanitizeForLog(identifier));
+        logger.info("Registration successful");
         String token = jwtUtil.generateToken(identifier);
 
         return new AuthResponse(token, identifier, user.getFirstName(), user.getLastName(), user.getEmail(), user.getPhone());
@@ -67,16 +55,16 @@ public class AuthController {
         try {
             user = userService.findByEmailOrPhone(loginRequest.getIdentifier());
         } catch (ResourceNotFoundException e) {
-            logger.warn("Login failed: unknown identifier: {}", sanitizeForLog(loginRequest.getIdentifier()));
+            logger.warn("Login failed: unknown identifier");
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
-            logger.warn("Login failed: incorrect password for identifier: {}", sanitizeForLog(loginRequest.getIdentifier()));
+            logger.warn("Login failed: incorrect password");
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
-        logger.info("Login successful for user: {}", sanitizeForLog(loginRequest.getIdentifier()));
+        logger.info("Login successful");
         String token = jwtUtil.generateToken(loginRequest.getIdentifier());
 
         return new AuthResponse(token, loginRequest.getIdentifier(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getPhone());
@@ -87,6 +75,6 @@ public class AuthController {
         String identifier = authentication.getName();
         User user = userService.findByEmailOrPhone(identifier);
         userService.changePassword(user.getId(), request.getOldPassword(), request.getNewPassword());
-        logger.info("Password changed successfully for user: {}", sanitizeForLog(identifier));
+        logger.info("Password changed successfully");
     }
 }
