@@ -223,6 +223,21 @@ button {
   width: 100%;
 }
 
+.btn-sm {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.btn-danger {
+  background: var(--btn-danger-bg, var(--danger));
+  color: var(--btn-danger-text, #fff);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+}
+
 /* =========================================================
    Forms
    ========================================================= */
@@ -712,6 +727,10 @@ input.input[type='password']::-ms-reveal {
   animation: rise-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.modal-wide {
+  width: min(100%, 560px);
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -763,6 +782,45 @@ input.input[type='password']::-ms-reveal {
   gap: 10px;
   padding: 16px 24px;
   border-top: 1px solid var(--border);
+}
+
+.contact-subsection {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.contact-subsection-title {
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.contact-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-sub-row + .contact-sub-row {
+  margin-top: 10px;
+}
+
+.contact-sub-fields {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 10px;
+  flex: 1;
+}
+
+.contact-sub-actions {
+  flex-shrink: 0;
+}
+
+.contact-add-btn {
+  margin-top: 12px;
 }
 
 /* =========================================================
@@ -871,6 +929,20 @@ input.input[type='password']::-ms-reveal {
   overflow-wrap: anywhere;
 }
 
+.contact-row-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.contact-delete-btn {
+  color: var(--danger);
+}
+
+.contact-delete-btn:hover {
+  background: var(--danger-bg);
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -888,7 +960,14 @@ input.input[type='password']::-ms-reveal {
 }
 
 .contacts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-top: 24px;
+}
+
+.contacts-toolbar .search-field {
+  flex: 1;
 }
 
 .search-input {

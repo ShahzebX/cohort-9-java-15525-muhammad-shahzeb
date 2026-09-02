@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getContactsPage, searchContacts } from '../api/contacts'
 import Alert from '../components/Alert'
+import ContactFormModal from '../components/ContactFormModal'
+import DeleteContactModal from '../components/DeleteContactModal'
 import { getApiError } from '../lib/errors'
 
 const PAGE_SIZE = 10
 const SEARCH_DELAY = 300
 
-function ContactRow({ contact }) {
+function ContactRow({ contact, onEdit, onDelete }) {
   const fullName =
     [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Unnamed contact'
   const emails = contact.emails ?? []
@@ -24,7 +26,7 @@ function ContactRow({ contact }) {
           {emails.map((email) => (
             <span key={email.id} className="contact-detail">
               {email.label ? `${email.label}: ` : ''}
-              {email.emailAddress}
+              {email.emailAddress ?? email.email}
             </span>
           ))}
           {phones.map((phone) => (
@@ -35,6 +37,18 @@ function ContactRow({ contact }) {
           ))}
         </div>
       )}
+      <div className="contact-row-actions">
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => onEdit(contact)}>
+          Update
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm contact-delete-btn"
+          onClick={() => onDelete(contact)}
+        >
+          Delete
+        </button>
+      </div>
     </li>
   )
 }
@@ -49,6 +63,14 @@ export default function ContactsPage() {
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [reloadToken, setReloadToken] = useState(0)
+
+  const [formOpen, setFormOpen] = useState(false)
+  const [formMode, setFormMode] = useState('create')
+  const [formContact, setFormContact] = useState(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteContact, setDeleteContact] = useState(null)
+  const [banner, setBanner] = useState(null)
+  const bannerTimerRef = useRef(null)
 
   const searching = debouncedQuery.trim().length > 0
 
@@ -96,6 +118,53 @@ export default function ContactsPage() {
     }
   }, [searching, debouncedQuery, page, reloadToken])
 
+  useEffect(() => {
+    return () => {
+      if (bannerTimerRef.current) {
+        window.clearTimeout(bannerTimerRef.current)
+      }
+    }
+  }, [])
+
+  function showBanner(message) {
+    setBanner(message)
+    if (bannerTimerRef.current) {
+      window.clearTimeout(bannerTimerRef.current)
+    }
+    bannerTimerRef.current = window.setTimeout(() => setBanner(null), 4000)
+  }
+
+  function handleCreate() {
+    setFormMode('create')
+    setFormContact(null)
+    setFormOpen(true)
+  }
+
+  function handleEdit(contact) {
+    setFormMode('edit')
+    setFormContact(contact)
+    setFormOpen(true)
+  }
+
+  function handleDeleteClick(contact) {
+    setDeleteContact(contact)
+    setDeleteOpen(true)
+  }
+
+  function handleSaved() {
+    setFormOpen(false)
+    setDeleteOpen(false)
+    setReloadToken((value) => value + 1)
+    showBanner(formMode === 'edit' ? 'Contact updated.' : 'Contact created.')
+  }
+
+  function handleDeleted() {
+    setDeleteOpen(false)
+    setDeleteContact(null)
+    setReloadToken((value) => value + 1)
+    showBanner('Contact deleted.')
+  }
+
   function handleQueryChange(event) {
     setQuery(event.target.value)
   }
@@ -141,7 +210,16 @@ export default function ContactsPage() {
             onChange={handleQueryChange}
           />
         </label>
+        <button type="button" className="btn btn-primary" onClick={handleCreate}>
+          New contact
+        </button>
       </div>
+
+      {banner && (
+        <div className="banner-wrap">
+          <Alert variant="success">{banner}</Alert>
+        </div>
+      )}
 
       {error && (
         <div className="banner-wrap">
@@ -161,7 +239,12 @@ export default function ContactsPage() {
         <>
           <ul className="card contact-list">
             {contacts.map((contact) => (
-              <ContactRow key={contact.id} contact={contact} />
+              <ContactRow
+                key={contact.id}
+                contact={contact}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+              />
             ))}
           </ul>
 
@@ -206,10 +289,26 @@ export default function ContactsPage() {
           </span>
           <h2 className="empty-state-title">No contacts yet</h2>
           <p className="empty-state-text">
-            Contacts you add will appear here. The create form is coming in the next iteration.
+            Click "New contact" above to create your first contact.
           </p>
         </div>
       )}
+
+      <ContactFormModal
+        key={`${formMode}-${formContact?.id ?? 'new'}-${formOpen}`}
+        open={formOpen}
+        mode={formMode}
+        contact={formContact}
+        onClose={() => setFormOpen(false)}
+        onSaved={handleSaved}
+      />
+
+      <DeleteContactModal
+        open={deleteOpen}
+        contact={deleteContact}
+        onClose={() => setDeleteOpen(false)}
+        onDeleted={handleDeleted}
+      />
     </>
   )
 }

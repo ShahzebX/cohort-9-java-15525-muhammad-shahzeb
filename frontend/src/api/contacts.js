@@ -18,3 +18,17 @@ export async function searchContacts(query) {
   })
   return response.data
 }
+
+export async function createContact(contact) {
+  const response = await api.post('/contacts', contact)
+  return response.data
+}
+
+export async function updateContact(id, contact) {
+  const response = await api.put(`/contacts/${id}`, contact)
+  return response.data
+}
+
+export async function deleteContact(id) {
+  await api.delete(`/contacts/${id}`)
+}
