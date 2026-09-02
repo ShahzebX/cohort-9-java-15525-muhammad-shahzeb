@@ -1,5 +1,6 @@
 package com.example.contactmanagementsystem;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
@@ -75,6 +76,7 @@ public class User {
         this.lastName = lastName;
     }
 
+    @JsonIgnore
     public String getPasswordHash() {
         return passwordHash;
     }
