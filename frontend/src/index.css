@@ -801,6 +801,77 @@ input.input[type='password']::-ms-reveal {
 }
 
 /* =========================================================
+   Contacts list
+   ========================================================= */
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 16px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.loading-state .spinner {
+  width: 18px;
+  height: 18px;
+  border-color: var(--border-strong);
+  border-top-color: var(--accent);
+}
+
+.retry-btn {
+  margin-top: 12px;
+}
+
+.contact-list {
+  margin-top: 28px;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+
+.contact-row {
+  display: grid;
+  gap: 6px;
+  padding: 16px 24px;
+}
+
+.contact-row + .contact-row {
+  border-top: 1px solid var(--border);
+}
+
+.contact-row-main {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.contact-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.contact-title {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.contact-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+
+.contact-detail {
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* =========================================================
    Motion
    ========================================================= */
 
