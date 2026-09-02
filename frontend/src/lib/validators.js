@@ -44,6 +44,8 @@ export function validateLogin(values) {
     errors.identifier = 'Enter your email or phone number.'
   } else if (identifierLooksLikeEmail(identifier) && !isValidEmail(identifier)) {
     errors.identifier = 'Enter a valid email address.'
+  } else if (!identifierLooksLikeEmail(identifier) && !isValidPhone(identifier)) {
+    errors.identifier = 'Enter a valid phone number.'
   }
 
   if (!values.password) {

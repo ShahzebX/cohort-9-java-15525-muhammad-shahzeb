@@ -3,7 +3,6 @@ import { loginUser, registerUser } from '../api/auth'
 import { setUnauthorizedHandler } from '../api/client'
 import { AuthContext } from './auth-context'
 import { clearSession, getStoredUser, getToken, setSession } from '../lib/session'
-import { isTokenExpired } from '../lib/jwt'
 
 function buildUser(identifier, extra = {}) {
   const isEmail = typeof identifier === 'string' && identifier.includes('@')
@@ -18,18 +17,13 @@ function buildUser(identifier, extra = {}) {
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => getToken())
-  const [user, setUser] = useState(() => {
-    const storedToken = getToken()
-    if (storedToken && isTokenExpired(storedToken)) {
-      clearSession()
-      return null
-    }
-    return getStoredUser()
-  })
+  const [user, setUser] = useState(() => getStoredUser())
 
   const saveSession = useCallback((nextToken, nextUser) => {
+    // The JWT is delivered as an HttpOnly cookie by the server; the token
+    // argument is unused for storage. Only non-sensitive UI state is kept.
     setSession(nextToken, nextUser)
-    setToken(nextToken)
+    setToken(getToken())
     setUser(nextUser)
   }, [])
 
@@ -68,7 +62,7 @@ export function AuthProvider({ children }) {
     () => ({
       token,
       user,
-      isAuthenticated: Boolean(token) && !isTokenExpired(token),
+      isAuthenticated: Boolean(token),
       login,
       register,
       logout,

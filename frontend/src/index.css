@@ -540,7 +540,7 @@ input.input[type='password']::-ms-reveal {
 
 @media (prefers-reduced-motion: reduce) {
   .spinner {
-    animation-duration: 1.6s;
+    animation: none;
   }
 }
 
