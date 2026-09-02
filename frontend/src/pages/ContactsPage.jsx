@@ -23,7 +23,7 @@ function ContactRow({ contact }) {
           {emails.map((email) => (
             <span key={email.id} className="contact-detail">
               {email.label ? `${email.label}: ` : ''}
-              {email.emailAddress}
+              {email.email}
             </span>
           ))}
           {phones.map((phone) => (
