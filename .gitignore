@@ -79,6 +79,7 @@ Thumbs.db
 # ==================================================
 
 HELP.md
+frontend_build_spec.md
 
 # ==================================================
 # Skills / agents
@@ -86,3 +87,7 @@ HELP.md
 
 **/SKILL.md
 **/skills.md
+.opencode/
+.agents/
+.impeccable/
+skills-lock.json
