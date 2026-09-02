@@ -38,7 +38,8 @@ class UserServiceTest {
         user.setId(1);
         user.setEmail("test@example.com");
         user.setPhone("1234567890");
-        user.setPasswordHash("rawPassword");
+        // Must satisfy enforcePasswordPolicy: ≥8 chars, ≥1 letter, ≥1 digit.
+        user.setPasswordHash("rawPass1");
     }
 
     @Test
@@ -62,7 +63,8 @@ class UserServiceTest {
     @Test
     void registerUser_shouldThrowWhenNoEmailAndNoPhone() {
         User noContact = new User();
-        noContact.setPasswordHash("password");
+        // Policy-valid password so the test reaches the email/phone check, not the policy check.
+        noContact.setPasswordHash("passWord1");
 
         assertThrows(IllegalArgumentException.class, () -> userService.registerUser(noContact));
     }
@@ -107,20 +109,23 @@ class UserServiceTest {
     @Test
     void changePassword_shouldEncodeAndSave() {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("oldPass", "rawPassword")).thenReturn(true);
-        when(passwordEncoder.encode("newPass")).thenReturn("encodedNewPass");
+        // "oldPass1" matches the stored hash; "newPass1" satisfies enforcePasswordPolicy.
+        when(passwordEncoder.matches("oldPass1", "rawPass1")).thenReturn(true);
+        when(passwordEncoder.encode("newPass1")).thenReturn("encodedNewPass");
 
-        userService.changePassword(1, "oldPass", "newPass");
+        userService.changePassword(1, "oldPass1", "newPass1");
 
-        verify(passwordEncoder).encode("newPass");
+        verify(passwordEncoder).encode("newPass1");
         verify(userRepository).save(any(User.class));
     }
 
     @Test
     void changePassword_shouldThrowWhenOldPasswordIncorrect() {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrongPass", "rawPassword")).thenReturn(false);
+        // "wrongPass1" satisfies enforcePasswordPolicy for newPassword so the test
+        // reaches the passwordEncoder.matches check — the intended assertion point.
+        when(passwordEncoder.matches("wrongPass", "rawPass1")).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () -> userService.changePassword(1, "wrongPass", "newPass"));
+        assertThrows(IllegalArgumentException.class, () -> userService.changePassword(1, "wrongPass", "newPass1"));
     }
 }
