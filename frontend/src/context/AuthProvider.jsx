@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { loginUser, registerUser } from '../api/auth'
 import { setUnauthorizedHandler } from '../api/client'
 import { AuthContext } from './auth-context'
-import { clearSession, getStoredUser, getToken, setSession } from '../lib/session'
+import { clearSession, getStoredUser, getToken, setMemoryToken, setSession } from '../lib/session'
 
 function buildUser(identifier, extra = {}) {
   const isEmail = typeof identifier === 'string' && identifier.includes('@')
@@ -42,6 +42,7 @@ export function AuthProvider({ children }) {
     async (credentials) => {
       const data = await loginUser(credentials)
       const nextUser = buildUser(data.identifier, data)
+      setMemoryToken(data.token)
       saveSession(data.token, nextUser)
       return data
     },
@@ -52,6 +53,7 @@ export function AuthProvider({ children }) {
     async (payload) => {
       const data = await registerUser(payload)
       const nextUser = buildUser(data.identifier, payload)
+      setMemoryToken(data.token)
       saveSession(data.token, nextUser)
       return data
     },

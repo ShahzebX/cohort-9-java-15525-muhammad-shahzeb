@@ -1,10 +1,26 @@
 const USER_KEY = 'cms.user'
 
+// ---------------------------------------------------------------------------
+// In-memory token slot.
+// The JWT returned by the server lives here only — never in localStorage.
+// It is lost on tab close, which is the desired security posture for a bearer
+// token that cannot be revoked before expiry.
+// ---------------------------------------------------------------------------
+let _memoryToken = null
+
+/** Store the bearer token in memory only. */
+export function setMemoryToken(token) {
+  _memoryToken = token ?? null
+}
+
+/** Return the current in-memory bearer token, or null when not authenticated. */
+export function getMemoryToken() {
+  return _memoryToken
+}
+
 export function getToken() {
-  // The bearer token is held in a server-set HttpOnly, Secure, SameSite cookie
-  // which JavaScript cannot read; it is sent automatically on each request via
-  // withCredentials. The presence of the non-sensitive session marker below
-  // reflects an active session.
+  // The presence of the non-sensitive session marker below
+  // reflects an active session; the actual JWT is held in _memoryToken.
   return hasStoredUser() ? 'active' : null
 }
 
@@ -32,8 +48,8 @@ export function getStoredUser() {
 }
 
 export function setSession(token, user) {
-  // The token itself lives in the server-side HttpOnly cookie; only
-  // non-sensitive UI state is persisted in browser storage.
+  // Persist only the non-sensitive user profile for UI state.
+  // The bearer token is kept in _memoryToken via setMemoryToken().
   try {
     localStorage.setItem(USER_KEY, JSON.stringify(user ?? null))
   } catch {
@@ -42,6 +58,7 @@ export function setSession(token, user) {
 }
 
 export function clearSession() {
+  _memoryToken = null
   try {
     localStorage.removeItem(USER_KEY)
   } catch {

@@ -16,24 +16,31 @@ import java.sql.SQLIntegrityConstraintViolationException;
 public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-    private static String sanitizeForLog(String value) {
-        if (value == null) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder(value.length());
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            sb.append(Character.isISOControl(c) ? '?' : c);
-        }
-        return sb.toString();
-    }
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    /** Minimum number of characters required in a password. Must match the frontend policy. */
+    public static final int MIN_PASSWORD_LENGTH = 8;
+
+    /**
+     * Validates that the supplied plain-text password meets the shared policy:
+     * at least {@value #MIN_PASSWORD_LENGTH} characters, at least one letter,
+     * and at least one digit.  Throws {@link IllegalArgumentException} (mapped to
+     * HTTP 400 by {@code GlobalExceptionHandler}) when the policy is violated.
+     */
+    private void enforcePasswordPolicy(String password) {
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH
+                || !password.matches(".*[a-zA-Z].*")
+                || !password.matches(".*\\d.*")) {
+            throw new IllegalArgumentException(
+                    "Password must be at least " + MIN_PASSWORD_LENGTH
+                            + " characters and contain both letters and digits.");
+        }
     }
 
     public User registerUser(User user){
@@ -46,6 +53,8 @@ public class UserService {
         if (user.getPasswordHash() == null || user.getPasswordHash().isBlank())
             throw new IllegalArgumentException("Password must not be blank");
 
+        enforcePasswordPolicy(user.getPasswordHash());
+
         if (noPhone && noEmail)
             throw new IllegalArgumentException("User must register using either Email or Phone");
 
@@ -56,11 +65,10 @@ public class UserService {
             throw new DuplicateResourceException("Email already in use: " + user.getEmail());
 
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        String identifier = noEmail ? user.getPhone() : user.getEmail();
 
         try {
             User saved = userRepository.save(user);
-            logger.info("Registered new user id={} identifier={}", saved.getId(), sanitizeForLog(identifier));
+            logger.info("Registered new user id={}", saved.getId());
             return saved;
         } catch (DataIntegrityViolationException e) {
             Throwable cause = e;
@@ -90,6 +98,8 @@ public class UserService {
             throw new IllegalArgumentException("Old password cannot be blank");
         if (newPassword == null || newPassword.isBlank())
             throw new IllegalArgumentException("New password cannot be blank");
+
+        enforcePasswordPolicy(newPassword);
 
         if(newPassword.equals(oldPassword))
             throw new IllegalArgumentException("New password cannot be the same as the old password");

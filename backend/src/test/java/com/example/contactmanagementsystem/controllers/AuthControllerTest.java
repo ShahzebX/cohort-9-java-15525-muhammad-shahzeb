@@ -80,6 +80,21 @@ class AuthControllerTest {
     }
 
     @Test
+    void register_shouldReturn400OnWeakPassword() throws Exception {
+        // A password without digits violates the shared policy (letters + digits + minLength).
+        // UserService.enforcePasswordPolicy throws IllegalArgumentException → HTTP 400.
+        when(userService.registerUser(any()))
+                .thenThrow(new IllegalArgumentException(
+                        "Password must be at least 8 characters and contain both letters and digits."));
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\":\"John\",\"lastName\":\"Doe\","
+                                + "\"email\":\"test@example.com\",\"password\":\"weakpass\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void login_shouldReturnProfileFields() throws Exception {
         com.example.contactmanagementsystem.User user = new com.example.contactmanagementsystem.User();
         user.setId(1);

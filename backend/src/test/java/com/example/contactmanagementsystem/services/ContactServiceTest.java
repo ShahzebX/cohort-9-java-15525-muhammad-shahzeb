@@ -45,7 +45,7 @@ class ContactServiceTest {
 
     @Test
     void createContact_shouldSetUserAndSave() {
-        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+        when(contactRepository.save(any(Contact.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Contact result = contactService.createContact(new ContactRequest(), user);
 

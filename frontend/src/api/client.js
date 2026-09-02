@@ -1,12 +1,17 @@
 import axios from 'axios'
-import { clearSession } from '../lib/session'
+import { clearSession, getMemoryToken } from '../lib/session'
 
 const configuredBase = import.meta.env.VITE_API_BASE
 
 let baseURL = configuredBase || '/api'
 if (configuredBase) {
-  const { protocol } = new URL(configuredBase, window.location.origin)
-  if (protocol === 'http:') {
+  let parsedBase
+  try {
+    parsedBase = new URL(configuredBase, window.location.origin)
+  } catch {
+    throw new Error('VITE_API_BASE is not a valid URL. Check your environment configuration.')
+  }
+  if (parsedBase.protocol === 'http:') {
     throw new Error('VITE_API_BASE must use https: (insecure http base disallowed)')
   }
 }
@@ -24,6 +29,16 @@ let onUnauthorized = null
 export function setUnauthorizedHandler(handler) {
   onUnauthorized = handler
 }
+
+// Attach the in-memory bearer token (set after login/register) to every request.
+api.interceptors.request.use((config) => {
+  const token = getMemoryToken()
+  if (token) {
+    config.headers = config.headers ?? {}
+    config.headers['Authorization'] = `Bearer ${token}`
+  }
+  return config
+})
 
 api.interceptors.response.use(
   (response) => response,
