@@ -30,8 +30,8 @@ export default function RegisterPage() {
     const payload = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
+      email: email.trim() || null,
+      phone: phone.trim() || null,
       password,
       confirmPassword,
     }

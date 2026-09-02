@@ -27,7 +27,7 @@ api.interceptors.response.use(
   (error) => {
     const status = error?.response?.status
     const hadToken = Boolean(error?.config?.headers?.Authorization)
-    if (status === 401 && hadToken) {
+    if ((status === 401 || status === 403) && hadToken) {
       clearSession()
       if (onUnauthorized) {
         onUnauthorized()
