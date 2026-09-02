@@ -26,7 +26,7 @@ function ContactRow({ contact, onEdit, onDelete }) {
           {emails.map((email) => (
             <span key={email.id} className="contact-detail">
               {email.label ? `${email.label}: ` : ''}
-              {email.emailAddress ?? email.email}
+              {email.email}
             </span>
           ))}
           {phones.map((phone) => (
