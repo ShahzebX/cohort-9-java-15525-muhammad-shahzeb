@@ -32,6 +32,8 @@ public class ContactService {
     public Contact createContact(ContactRequest request, User user){
         if (request == null)
             throw new IllegalArgumentException("Contact data must not be null");
+        if (user == null)
+            throw new IllegalArgumentException("Contact owner must not be null");
         if (containsNull(request.getPhones()))
             throw new IllegalArgumentException("Phones must not contain null values");
         if (containsNull(request.getEmails()))
