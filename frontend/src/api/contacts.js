@@ -11,3 +11,10 @@ export async function getContactsPage(page = 0, size = 10) {
   })
   return response.data
 }
+
+export async function searchContacts(query) {
+  const response = await api.get('/contacts/search', {
+    params: { query },
+  })
+  return response.data
+}

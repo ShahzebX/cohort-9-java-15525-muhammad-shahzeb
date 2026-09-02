@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { getContactsPage } from '../api/contacts'
+import { getContactsPage, searchContacts } from '../api/contacts'
 import Alert from '../components/Alert'
 import { getApiError } from '../lib/errors'
 
 const PAGE_SIZE = 10
+const SEARCH_DELAY = 300
 
 function ContactRow({ contact }) {
   const fullName =
@@ -40,22 +41,47 @@ function ContactRow({ contact }) {
 
 export default function ContactsPage() {
   const [pageData, setPageData] = useState(null)
+  const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const [page, setPage] = useState(0)
+  const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [reloadToken, setReloadToken] = useState(0)
+
+  const searching = debouncedQuery.trim().length > 0
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query.trim())
+
+      if (query.trim() && page !== 0) {
+        setPage(0)
+      }
+    }, SEARCH_DELAY)
+
+    return () => clearTimeout(timer)
+  }, [query, page])
 
   useEffect(() => {
     let active = true
 
     async function load() {
       setLoading(true)
+      setError(null)
       try {
-        const data = await getContactsPage(page, PAGE_SIZE)
-        if (!active) return
-        setPageData(data)
-        setError(null)
+        if (searching) {
+          const data = await searchContacts(debouncedQuery)
+          if (!active) return
+          setResults(data)
+          setPageData(null)
+        } else {
+          const data = await getContactsPage(page, PAGE_SIZE)
+          if (!active) return
+          setPageData(data)
+          setResults(null)
+        }
       } catch (err) {
         if (!active) return
         setError(getApiError(err))
@@ -68,10 +94,13 @@ export default function ContactsPage() {
     return () => {
       active = false
     }
-  }, [page, reloadToken])
+  }, [searching, debouncedQuery, page, reloadToken])
+
+  function handleQueryChange(event) {
+    setQuery(event.target.value)
+  }
 
   function handleRetry() {
-    setError(null)
     setReloadToken((value) => value + 1)
   }
 
@@ -80,7 +109,7 @@ export default function ContactsPage() {
     setPage(nextPage)
   }
 
-  const contacts = pageData?.content ?? []
+  const contacts = searching ? (results ?? []) : (pageData?.content ?? [])
   const hasContacts = contacts.length > 0
   const currentPage = pageData?.totalPages > 0 ? pageData.number + 1 : 0
   const isFirst = pageData?.first ?? true
@@ -93,12 +122,25 @@ export default function ContactsPage() {
           <h1 className="page-title">Contacts</h1>
           <p className="page-desc">Browse all your saved contacts.</p>
         </div>
-        {pageData && (
+        {pageData && !searching && (
           <span className="badge">
             {pageData.totalElements}{' '}
             {pageData.totalElements === 1 ? 'contact' : 'contacts'}
           </span>
         )}
+      </div>
+
+      <div className="contacts-toolbar">
+        <label className="search-field">
+          <span className="sr-only">Search contacts by name</span>
+          <input
+            type="search"
+            className="search-input"
+            placeholder="Search by first or last name…"
+            value={query}
+            onChange={handleQueryChange}
+          />
+        </label>
       </div>
 
       {error && (
@@ -113,7 +155,7 @@ export default function ContactsPage() {
       {loading ? (
         <div className="loading-state" role="status">
           <span className="spinner" aria-hidden="true" />
-          <span>Loading contacts…</span>
+          <span>{searching ? 'Searching…' : 'Loading contacts…'}</span>
         </div>
       ) : error ? null : hasContacts ? (
         <>
@@ -123,28 +165,40 @@ export default function ContactsPage() {
             ))}
           </ul>
 
-          <nav className="pagination" aria-label="Contact list pagination">
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => goTo(page - 1)}
-              disabled={isFirst || pageData.totalPages <= 1}
-            >
-              Previous
-            </button>
-            <span className="pagination-status">
-              Page {currentPage} of {pageData.totalPages}
-            </span>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => goTo(page + 1)}
-              disabled={isLast || pageData.totalPages <= 1}
-            >
-              Next
-            </button>
-          </nav>
+          {!searching && (
+            <nav className="pagination" aria-label="Contact list pagination">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => goTo(page - 1)}
+                disabled={isFirst || pageData.totalPages <= 1}
+              >
+                Previous
+              </button>
+              <span className="pagination-status">
+                Page {currentPage} of {pageData.totalPages}
+              </span>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => goTo(page + 1)}
+                disabled={isLast || pageData.totalPages <= 1}
+              >
+                Next
+              </button>
+            </nav>
+          )}
         </>
+      ) : searching ? (
+        <div className="empty-state">
+          <span className="empty-state-icon" aria-hidden="true">
+            ?
+          </span>
+          <h2 className="empty-state-title">No matches</h2>
+          <p className="empty-state-text">
+            No contacts matched “{debouncedQuery}”. Try a different name.
+          </p>
+        </div>
       ) : (
         <div className="empty-state">
           <span className="empty-state-icon" aria-hidden="true">
