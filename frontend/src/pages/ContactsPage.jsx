@@ -82,6 +82,21 @@ export default function ContactsPage() {
         } else {
           const data = await getContactsPage(page, PAGE_SIZE)
           if (!active) return
+
+          // Guard against stale page numbers: if the server returned an empty
+          // page but contacts still exist on earlier pages, clamp to the last
+          // valid page. This happens when contacts on the current page are
+          // deleted elsewhere. No second request is made — the response already
+          // in hand is used to detect the condition.
+          if (
+            data.totalPages > 0 &&
+            data.content.length === 0 &&
+            page >= data.totalPages
+          ) {
+            setPage(data.totalPages - 1)
+            return   // Effect will re-run with the corrected page.
+          }
+
           setPageData(data)
           setResults(null)
         }
