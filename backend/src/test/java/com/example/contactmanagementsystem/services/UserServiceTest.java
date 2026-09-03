@@ -51,7 +51,7 @@ class UserServiceTest {
 
         User result = userService.registerUser(user);
 
-        verify(passwordEncoder).encode("rawPassword");
+        verify(passwordEncoder).encode("rawPass1");
         verify(userRepository).save(any(User.class));
     }
 
