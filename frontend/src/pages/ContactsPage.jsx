@@ -8,35 +8,38 @@ const SEARCH_DELAY = 300
 
 function ContactRow({ contact }) {
   const fullName =
-    [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Unnamed contact'
-  const emails = contact.emails ?? []
-  const phones = contact.phones ?? []
-  const hasDetails = emails.length > 0 || phones.length > 0
+    [contact.firstName, contact.lastName].filter(Boolean).join(" ") ||
+    "Unnamed contact";
+  const emails = contact.emails ?? [];
+  const phones = contact.phones ?? [];
+  const hasDetails = emails.length > 0 || phones.length > 0;
 
   return (
     <li className="contact-row">
       <div className="contact-row-main">
         <span className="contact-name">{fullName}</span>
-        {contact.title && <span className="contact-title">{contact.title}</span>}
+        {contact.title && (
+          <span className="contact-title">{contact.title}</span>
+        )}
       </div>
       {hasDetails && (
         <div className="contact-details">
           {emails.map((email) => (
             <span key={email.id} className="contact-detail">
-              {email.label ? `${email.label}: ` : ''}
+              {email.label ? `${email.label}: ` : ""}
               {email.email}
             </span>
           ))}
           {phones.map((phone) => (
             <span key={phone.id} className="contact-detail">
-              {phone.label ? `${phone.label}: ` : ''}
+              {phone.label ? `${phone.label}: ` : ""}
               {phone.phoneNumber}
             </span>
           ))}
         </div>
       )}
     </li>
-  )
+  );
 }
 
 export default function ContactsPage() {
@@ -65,7 +68,7 @@ export default function ContactsPage() {
   }, [query, page])
 
   useEffect(() => {
-    let active = true
+    let active = true;
 
     async function load() {
       setLoading(true)
@@ -82,15 +85,33 @@ export default function ContactsPage() {
           setPageData(data)
           setResults(null)
         }
-      } catch (err) {
+        const data = await getContactsPage(page, PAGE_SIZE)
         if (!active) return
-        setError(getApiError(err))
+
+        // Guard against stale page numbers: if the server returned an empty page
+        // but there are still contacts on earlier pages (totalPages > 0 and our
+        // page is at or beyond the new last page), clamp to the last valid page.
+        // This happens when contacts on the current page are deleted elsewhere.
+        if (
+          data.totalPages > 0 &&
+          data.content.length === 0 &&
+          page >= data.totalPages
+        ) {
+          setPage(data.totalPages - 1)
+          return   // Effect will re-run with the corrected page.
+        }
+
+        setPageData(data)
+        setError(null)
+      } catch (err) {
+        if (!active) return;
+        setError(getApiError(err));
       } finally {
-        if (active) setLoading(false)
+        if (active) setLoading(false);
       }
     }
 
-    load()
+    load();
     return () => {
       active = false
     }
@@ -105,8 +126,8 @@ export default function ContactsPage() {
   }
 
   function goTo(nextPage) {
-    if (nextPage < 0 || nextPage >= (pageData?.totalPages ?? 0)) return
-    setPage(nextPage)
+    if (nextPage < 0 || nextPage >= (pageData?.totalPages ?? 0)) return;
+    setPage(nextPage);
   }
 
   const contacts = searching ? (results ?? []) : (pageData?.content ?? [])
@@ -124,8 +145,8 @@ export default function ContactsPage() {
         </div>
         {pageData && !searching && (
           <span className="badge">
-            {pageData.totalElements}{' '}
-            {pageData.totalElements === 1 ? 'contact' : 'contacts'}
+            {pageData.totalElements}{" "}
+            {pageData.totalElements === 1 ? "contact" : "contacts"}
           </span>
         )}
       </div>
@@ -146,7 +167,11 @@ export default function ContactsPage() {
       {error && (
         <div className="banner-wrap">
           <Alert variant="error">{error}</Alert>
-          <button type="button" className="btn btn-ghost retry-btn" onClick={handleRetry}>
+          <button
+            type="button"
+            className="btn btn-ghost retry-btn"
+            onClick={handleRetry}
+          >
             Try again
           </button>
         </div>
@@ -206,10 +231,11 @@ export default function ContactsPage() {
           </span>
           <h2 className="empty-state-title">No contacts yet</h2>
           <p className="empty-state-text">
-            Contacts you add will appear here. The create form is coming in the next iteration.
+            Contacts you add will appear here. The create form is coming in the
+            next iteration.
           </p>
         </div>
       )}
     </>
-  )
+  );
 }

@@ -39,7 +39,7 @@ dist/
 *.iml
 *.ipr
 
-.vscode/
+**/.vscode/*
 
 # Eclipse / STS
 .classpath

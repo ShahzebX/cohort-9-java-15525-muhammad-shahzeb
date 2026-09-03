@@ -14,8 +14,8 @@ public class Phone {
 
     private String label;
 
-    @ManyToOne
-    @JoinColumn(name = "contact_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "contact_id", nullable = false)
     private Contact contact;
 
     public Phone() {

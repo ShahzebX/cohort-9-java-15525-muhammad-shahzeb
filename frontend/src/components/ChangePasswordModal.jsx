@@ -23,9 +23,46 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
       oldPasswordRef.current?.focus()
     }, 10)
 
+    // Selector for all standard interactive elements that are not disabled.
+    const FOCUSABLE = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',')
+
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
         handleClose()
+        return
+      }
+
+      if (event.key === 'Tab') {
+        // Re-query on every keydown so the list reflects current disabled state.
+        const modalEl = document.querySelector('[role="dialog"][aria-modal="true"]')
+        if (!modalEl) return
+
+        const focusable = Array.from(modalEl.querySelectorAll(FOCUSABLE))
+        if (focusable.length === 0) return
+
+        const first = focusable[0]
+        const last  = focusable[focusable.length - 1]
+
+        if (event.shiftKey) {
+          // Shift+Tab: if focus is on the first element, wrap to the last.
+          if (document.activeElement === first) {
+            event.preventDefault()
+            last.focus()
+          }
+        } else {
+          // Tab: if focus is on the last element, wrap to the first.
+          if (document.activeElement === last) {
+            event.preventDefault()
+            first.focus()
+          }
+        }
       }
     }
 
