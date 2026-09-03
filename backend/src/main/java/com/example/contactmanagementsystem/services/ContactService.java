@@ -32,6 +32,8 @@ public class ContactService {
     public Contact createContact(ContactRequest request, User user){
         if (request == null)
             throw new IllegalArgumentException("Contact data must not be null");
+        if (user == null)
+            throw new IllegalArgumentException("Contact owner must not be null");
         if (containsNull(request.getPhones()))
             throw new IllegalArgumentException("Phones must not contain null values");
         if (containsNull(request.getEmails()))
@@ -119,9 +121,14 @@ public class ContactService {
             replaceEmails(existingContact, request.getEmails());
         }
 
-        Contact saved = contactRepository.save(existingContact);
-        logger.info("Updated contact id={} for user id={}", id, user.getId());
-        return saved;
+        try {
+            Contact saved = contactRepository.saveAndFlush(existingContact);
+            logger.info("Updated contact id={} for user id={}", id, user.getId());
+            return saved;
+        } catch (DataIntegrityViolationException e) {
+            logger.warn("Contact update failed for contact id={} user id={}", id, user.getId());
+            throw new DuplicateResourceException("Contact update violates data constraints.", e);
+        }
     }
 
     private Email toEmail(EmailRequest request) {

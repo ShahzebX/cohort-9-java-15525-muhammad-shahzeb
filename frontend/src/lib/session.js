@@ -19,17 +19,11 @@ export function getMemoryToken() {
 }
 
 export function getToken() {
-  // The presence of the non-sensitive session marker below
-  // reflects an active session; the actual JWT is held in _memoryToken.
-  return hasStoredUser() ? 'active' : null
-}
-
-function hasStoredUser() {
-  try {
-    return localStorage.getItem(USER_KEY) != null
-  } catch {
-    return false
-  }
+  // Return the actual in-memory JWT so callers can distinguish a real bearer
+  // credential from the absence of one.  The synthetic 'active' placeholder
+  // was truthy even after a page reload when _memoryToken is null, causing
+  // isAuthenticated to be true with no usable token.
+  return _memoryToken
 }
 
 export function getStoredUser() {

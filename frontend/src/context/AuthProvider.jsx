@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { loginUser, registerUser } from '../api/auth'
 import { setUnauthorizedHandler } from '../api/client'
 import { AuthContext } from './auth-context'
-import { clearSession, getStoredUser, getToken, setMemoryToken, setSession } from '../lib/session'
+import { clearSession, getMemoryToken, getStoredUser, setMemoryToken, setSession } from '../lib/session'
 
 function buildUser(identifier, extra = {}) {
   const isEmail = typeof identifier === 'string' && identifier.includes('@')
@@ -16,7 +16,11 @@ function buildUser(identifier, extra = {}) {
 }
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => getToken())
+  // Initialize from the in-memory token only — it is null on every fresh page
+  // load.  Using a localStorage marker here produced a false authenticated state
+  // after reload: isAuthenticated was true but no bearer token existed, so every
+  // subsequent API call would fail with 401.
+  const [token, setToken] = useState(() => getMemoryToken())
   const [user, setUser] = useState(() => getStoredUser())
 
   const saveSession = useCallback((nextToken, nextUser) => {

@@ -637,7 +637,7 @@ input.input[type='password']::-ms-reveal {
 }
 
 .profile-row-value-empty {
-  color: var(--text-ghost);
+  color: var(--text-secondary);
   font-weight: 400;
   font-style: italic;
 }

@@ -158,4 +158,21 @@ class ContactControllerTest {
                         .principal(auth()))
                 .andExpect(status().isBadRequest());
     }
-}
+
+    @Test
+    void updateContact_shouldReturn409OnDataIntegrityViolation() throws Exception {
+        // Simulate the DuplicateResourceException that ContactService.updateContact
+        // now translates from DataIntegrityViolationException inside the saveAndFlush
+        // catch block, ensuring flush-time constraint failures surface as HTTP 409.
+        when(userService.findByEmailOrPhone("test@example.com")).thenReturn(mockUser());
+        when(contactService.updateContact(eq(1), any(ContactRequest.class), any()))
+                .thenThrow(new com.example.exception.DuplicateResourceException(
+                        "Contact update violates data constraints."));
+
+        mockMvc.perform(put("/api/contacts/1")
+                        .principal(auth())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\":\"Jane\",\"lastName\":\"Smith\"}"))
+                .andExpect(status().isConflict());
+    }
+}

@@ -54,6 +54,14 @@ class ContactServiceTest {
     }
 
     @Test
+    void createContact_shouldRejectNullUser() {
+        assertThrows(IllegalArgumentException.class,
+                () -> contactService.createContact(new ContactRequest(), null));
+
+        verify(contactRepository, never()).save(any(Contact.class));
+    }
+
+    @Test
     void createContact_shouldLinkNestedEmailAndPhoneToContact() {
         EmailRequest emailRequest = new EmailRequest();
         emailRequest.setEmail("nested@example.com");

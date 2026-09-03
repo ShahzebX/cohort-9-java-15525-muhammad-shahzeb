@@ -14,6 +14,23 @@ if (configuredBase) {
   if (parsedBase.protocol === 'http:') {
     throw new Error('VITE_API_BASE must use https: (insecure http base disallowed)')
   }
+} else {
+  // No explicit base configured — we fall back to the relative /api path.
+  // In development the Vite proxy forwards /api to localhost:8080, which is
+  // acceptable only when the dev server itself is localhost.
+  // In production the browser resolves /api against the page origin; if that
+  // origin is plain HTTP (non-localhost) bearer tokens would travel in the
+  // clear, so we reject the configuration early.
+  const isLocalhost =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '[::1]'
+  if (window.location.protocol === 'http:' && !isLocalhost) {
+    throw new Error(
+      'Credentialed API requests require HTTPS in production. ' +
+      'Set VITE_API_BASE to an https:// URL or serve the app over HTTPS.'
+    )
+  }
 }
 
 const api = axios.create({
