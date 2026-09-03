@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
     // The JWT is delivered as an HttpOnly cookie by the server; the token
     // argument is unused for storage. Only non-sensitive UI state is kept.
     setSession(nextToken, nextUser)
-    setToken(getToken())
+    setToken(getMemoryToken())
     setUser(nextUser)
   }, [])
 

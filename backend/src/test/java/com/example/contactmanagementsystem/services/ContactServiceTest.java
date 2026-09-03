@@ -126,12 +126,12 @@ class ContactServiceTest {
         updatedData.setPhones(new java.util.ArrayList<>());
 
         when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
-        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+        when(contactRepository.saveAndFlush(any(Contact.class))).thenReturn(contact);
 
         Contact result = contactService.updateContact(1, updatedData, user);
 
         assertEquals("Jane", result.getFirstName());
-        verify(contactRepository).save(contact);
+        verify(contactRepository).saveAndFlush(contact);
     }
 
     @Test
@@ -161,7 +161,7 @@ class ContactServiceTest {
         updatedData.setEmails(new java.util.ArrayList<>());
 
         when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
-        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+        when(contactRepository.saveAndFlush(any(Contact.class))).thenReturn(contact);
 
         contactService.updateContact(1, updatedData, user);
 
@@ -181,7 +181,7 @@ class ContactServiceTest {
         updatedData.setPhones(new java.util.ArrayList<>());
 
         when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
-        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+        when(contactRepository.saveAndFlush(any(Contact.class))).thenReturn(contact);
 
         contactService.updateContact(1, updatedData, user);
 
@@ -204,7 +204,7 @@ class ContactServiceTest {
         updatedData.setFirstName("Jane");
 
         when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
-        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+        when(contactRepository.saveAndFlush(any(Contact.class))).thenReturn(contact);
 
         Contact result = contactService.updateContact(1, updatedData, user);
 
@@ -224,7 +224,7 @@ class ContactServiceTest {
         updatedData.setFirstName("Jane");
 
         when(contactRepository.findByIdAndUser(1, user)).thenReturn(Optional.of(contact));
-        when(contactRepository.save(any(Contact.class))).thenReturn(contact);
+        when(contactRepository.saveAndFlush(any(Contact.class))).thenReturn(contact);
 
         Contact result = contactService.updateContact(1, updatedData, user);
 
@@ -250,7 +250,6 @@ class ContactServiceTest {
         assertSame(existingPhone, contact.getPhones().get(0));
         assertEquals("John", contact.getFirstName());
     }
-
     @Test
     void getContactsPaginated_shouldThrowWhenSizeExceedsMax() {
         assertThrows(IllegalArgumentException.class,
@@ -262,5 +261,77 @@ class ContactServiceTest {
     void getContactsPaginated_shouldThrowWhenPageNegativeOrSizeZero() {
         assertThrows(IllegalArgumentException.class, () -> contactService.getContactsPaginated(-1, 10, user));
         assertThrows(IllegalArgumentException.class, () -> contactService.getContactsPaginated(0, 0, user));
+    }
+
+    @Test
+    void getContactsPaginated_shouldPassAscendingIdSortToRepository() {
+        // Capture the Pageable handed to the repository and assert it carries an
+        // ascending id sort so the database always returns contacts in a stable order.
+        org.mockito.ArgumentCaptor<org.springframework.data.domain.Pageable> captor =
+                org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        when(contactRepository.findByUser(eq(user), captor.capture()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+
+        contactService.getContactsPaginated(0, 10, user);
+
+        org.springframework.data.domain.Sort sort = captor.getValue().getSort();
+        org.springframework.data.domain.Sort.Order order = sort.getOrderFor("id");
+        assertNotNull(order, "Pageable must include a sort on the id field");
+        assertTrue(order.isAscending(), "Sort on id must be ascending");
+    }
+
+    @Test
+    void getContactsPaginated_consecutivePages_shouldNotDuplicateOrOmitContacts() {
+        // Build four contacts with distinct ids simulating two full pages of size 2.
+        Contact c1 = makeContact(1, "Alice");
+        Contact c2 = makeContact(2, "Bob");
+        Contact c3 = makeContact(3, "Carol");
+        Contact c4 = makeContact(4, "Dave");
+
+        org.springframework.data.domain.PageImpl<Contact> page0 =
+                new org.springframework.data.domain.PageImpl<>(java.util.List.of(c1, c2),
+                        org.springframework.data.domain.PageRequest.of(0, 2,
+                                org.springframework.data.domain.Sort.by(
+                                        org.springframework.data.domain.Sort.Direction.ASC, "id")),
+                        4);
+        org.springframework.data.domain.PageImpl<Contact> page1 =
+                new org.springframework.data.domain.PageImpl<>(java.util.List.of(c3, c4),
+                        org.springframework.data.domain.PageRequest.of(1, 2,
+                                org.springframework.data.domain.Sort.by(
+                                        org.springframework.data.domain.Sort.Direction.ASC, "id")),
+                        4);
+
+        when(contactRepository.findByUser(eq(user),
+                org.mockito.ArgumentMatchers.argThat(p -> p.getPageNumber() == 0)))
+                .thenReturn(page0);
+        when(contactRepository.findByUser(eq(user),
+                org.mockito.ArgumentMatchers.argThat(p -> p.getPageNumber() == 1)))
+                .thenReturn(page1);
+
+        java.util.List<Contact> first  = contactService.getContactsPaginated(0, 2, user).getContent();
+        java.util.List<Contact> second = contactService.getContactsPaginated(1, 2, user).getContent();
+
+        java.util.Set<Integer> firstIds  = new java.util.HashSet<>();
+        java.util.Set<Integer> secondIds = new java.util.HashSet<>();
+        first.forEach(c  -> firstIds.add(c.getId()));
+        second.forEach(c -> secondIds.add(c.getId()));
+
+        // No contact appears on both pages.
+        firstIds.retainAll(secondIds);
+        assertTrue(firstIds.isEmpty(), "Consecutive pages must not share any contact ids");
+
+        // Together they cover all four contacts.
+        java.util.Set<Integer> all = new java.util.HashSet<>();
+        first.forEach(c  -> all.add(c.getId()));
+        second.forEach(c -> all.add(c.getId()));
+        assertEquals(java.util.Set.of(1, 2, 3, 4), all, "All contacts must appear exactly once across consecutive pages");
+    }
+
+    private Contact makeContact(int id, String firstName) {
+        Contact c = new Contact();
+        c.setId(id);
+        c.setFirstName(firstName);
+        c.setUser(user);
+        return c;
     }
 }

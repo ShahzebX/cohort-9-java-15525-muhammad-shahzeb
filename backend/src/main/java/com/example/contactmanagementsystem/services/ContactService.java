@@ -13,6 +13,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -186,7 +187,7 @@ public class ContactService {
             throw new IllegalArgumentException("Page size must be greater than 0");
         if(size > MAX_PAGE_SIZE)
             throw new IllegalArgumentException("Page size must not exceed " + MAX_PAGE_SIZE);
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"));
         return contactRepository.findByUser(user, pageable);
     }
 

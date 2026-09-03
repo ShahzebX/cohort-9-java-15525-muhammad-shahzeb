@@ -1,5 +1,6 @@
 package com.example.contactmanagementsystem.dto;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 public class ContactRequest {
@@ -7,6 +8,7 @@ public class ContactRequest {
     private String lastName;
     private String title;
     private List<EmailRequest> emails;
+    @Valid
     private List<PhoneRequest> phones;
 
     public ContactRequest() {

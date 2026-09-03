@@ -5,6 +5,7 @@ import com.example.contactmanagementsystem.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.util.Optional;
 
@@ -15,6 +16,9 @@ class UserRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @Test
     void findByEmail_shouldReturnUser() {
@@ -60,11 +64,15 @@ class UserRepositoryTest {
         user.setEmail("jane@example.com");
         user.setPhone("3333333333");
         user.setPasswordHash("encoded");
-        User saved = userRepository.save(user);
+        // saveAndFlush forces a SQL INSERT immediately; clear() evicts the entity
+        // from the first-level cache so the following findById issues a real SELECT
+        // rather than returning the in-memory instance.
+        User saved = userRepository.saveAndFlush(user);
+        entityManager.clear();
 
         User fetched = userRepository.findById(saved.getId()).orElseThrow();
         assertEquals("Jane", fetched.getFirstName());
         assertEquals("Smith", fetched.getLastName());
         assertNotNull(fetched.getCreatedAt());
     }
-}
+}
