@@ -42,7 +42,10 @@ export default function RegisterPage() {
 
     setSubmitting(true)
     try {
-      await register(payload)
+      // Omit confirmPassword — it is a UI validation field only and is not
+      // declared on the backend RegisterRequest DTO.
+      const { confirmPassword: _cp, ...registrationPayload } = payload
+      await register(registrationPayload)
       navigate('/contacts', { replace: true })
     } catch (error) {
       setFormError(getApiError(error))

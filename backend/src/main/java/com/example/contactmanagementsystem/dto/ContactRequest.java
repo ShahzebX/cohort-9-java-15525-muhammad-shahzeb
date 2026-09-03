@@ -7,6 +7,7 @@ public class ContactRequest {
     private String firstName;
     private String lastName;
     private String title;
+    @Valid
     private List<EmailRequest> emails;
     @Valid
     private List<PhoneRequest> phones;
