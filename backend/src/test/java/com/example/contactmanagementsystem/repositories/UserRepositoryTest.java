@@ -75,4 +75,4 @@ class UserRepositoryTest {
         assertEquals("Smith", fetched.getLastName());
         assertNotNull(fetched.getCreatedAt());
     }
-}
+}
