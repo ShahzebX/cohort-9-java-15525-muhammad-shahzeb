@@ -8,8 +8,10 @@ import com.example.contactmanagementsystem.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -28,7 +30,7 @@ public class ContactController {
     }
 
     @PostMapping
-    public Contact createContact(@RequestBody ContactRequest request, Authentication authentication) {
+    public Contact createContact(@Valid @RequestBody ContactRequest request, Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
         return contactService.createContact(request, user);
     }
@@ -46,7 +48,7 @@ public class ContactController {
     }
 
     @PutMapping("/{id}")
-    public Contact updateContact(@PathVariable Integer id, @RequestBody ContactRequest request, Authentication authentication) {
+    public Contact updateContact(@PathVariable Integer id, @Valid @RequestBody ContactRequest request, Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
         return contactService.updateContact(id, request, user);
     }

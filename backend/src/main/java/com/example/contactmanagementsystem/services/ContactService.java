@@ -13,6 +13,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,8 @@ public class ContactService {
     public Contact createContact(ContactRequest request, User user){
         if (request == null)
             throw new IllegalArgumentException("Contact data must not be null");
+        if (user == null)
+            throw new IllegalArgumentException("Contact owner must not be null");
         if (containsNull(request.getPhones()))
             throw new IllegalArgumentException("Phones must not contain null values");
         if (containsNull(request.getEmails()))
@@ -119,9 +122,14 @@ public class ContactService {
             replaceEmails(existingContact, request.getEmails());
         }
 
-        Contact saved = contactRepository.save(existingContact);
-        logger.info("Updated contact id={} for user id={}", id, user.getId());
-        return saved;
+        try {
+            Contact saved = contactRepository.saveAndFlush(existingContact);
+            logger.info("Updated contact id={} for user id={}", id, user.getId());
+            return saved;
+        } catch (DataIntegrityViolationException e) {
+            logger.warn("Contact update failed for contact id={} user id={}", id, user.getId());
+            throw new DuplicateResourceException("Contact update violates data constraints.", e);
+        }
     }
 
     private Email toEmail(EmailRequest request) {
@@ -179,7 +187,7 @@ public class ContactService {
             throw new IllegalArgumentException("Page size must be greater than 0");
         if(size > MAX_PAGE_SIZE)
             throw new IllegalArgumentException("Page size must not exceed " + MAX_PAGE_SIZE);
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"));
         return contactRepository.findByUser(user, pageable);
     }
 

@@ -652,7 +652,7 @@ input.input[type='password']::-ms-reveal {
 }
 
 .profile-row-value-empty {
-  color: var(--text-ghost);
+  color: var(--text-secondary);
   font-weight: 400;
   font-style: italic;
 }
@@ -716,10 +716,17 @@ input.input[type='password']::-ms-reveal {
   display: grid;
   place-items: center;
   padding: 20px;
+  /* Fallback: if the modal somehow exceeds the viewport, the overlay scrolls
+     so the footer and controls remain reachable. */
+  overflow-y: auto;
 }
 
 .modal {
   width: min(100%, 440px);
+  /* Constrain height to the visible viewport (minus the overlay padding) and
+     enable internal scrolling so tall content never hides the modal footer. */
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);

@@ -1,12 +1,15 @@
 package com.example.contactmanagementsystem.dto;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 public class ContactRequest {
     private String firstName;
     private String lastName;
     private String title;
+    @Valid
     private List<EmailRequest> emails;
+    @Valid
     private List<PhoneRequest> phones;
 
     public ContactRequest() {
