@@ -6,6 +6,7 @@ import Alert from './Alert'
 export default function DeleteContactModal({ open, contact = null, onClose, onDeleted }) {
   const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
   const cancelRef = useRef(null)
 
   useEffect(() => {
@@ -18,7 +19,7 @@ export default function DeleteContactModal({ open, contact = null, onClose, onDe
     }, 10)
 
     function handleKeyDown(event) {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !submittingRef.current) {
         onClose()
       }
     }
@@ -40,6 +41,7 @@ export default function DeleteContactModal({ open, contact = null, onClose, onDe
     if (!contact) return
     setFormError(null)
     setSubmitting(true)
+    submittingRef.current = true
     try {
       await deleteContact(contact.id)
       onDeleted()
@@ -47,6 +49,7 @@ export default function DeleteContactModal({ open, contact = null, onClose, onDe
       setFormError(getApiError(error))
     } finally {
       setSubmitting(false)
+      submittingRef.current = false
     }
   }
 

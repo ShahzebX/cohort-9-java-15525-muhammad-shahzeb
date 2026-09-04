@@ -74,6 +74,9 @@ export default function ContactsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState("create");
   const [formContact, setFormContact] = useState(null);
+  // Increments on every modal open so ContactFormModal remounts with a fresh
+  // local state, discarding any previously dismissed, unsaved edits.
+  const [formSession, setFormSession] = useState(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteContact, setDeleteContact] = useState(null);
   const [banner, setBanner] = useState(null);
@@ -172,12 +175,14 @@ export default function ContactsPage() {
   function handleOpenCreate() {
     setFormMode("create");
     setFormContact(null);
+    setFormSession((value) => value + 1);
     setFormOpen(true);
   }
 
   function handleEdit(contact) {
     setFormMode("edit");
     setFormContact(contact);
+    setFormSession((value) => value + 1);
     setFormOpen(true);
   }
 
@@ -329,6 +334,7 @@ export default function ContactsPage() {
       )}
 
       <ContactFormModal
+        key={formSession}
         open={formOpen}
         mode={formMode}
         contact={formContact}
