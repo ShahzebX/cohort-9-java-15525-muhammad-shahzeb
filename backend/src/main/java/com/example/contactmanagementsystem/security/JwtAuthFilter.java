@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,9 +36,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
-            if (jwtUtil.isTokenValid(token)) {
-                String identifier = jwtUtil.extractSubject(token);
+            // Parse and validate the token exactly once. Extracting the subject
+            // from the same Claims object avoids a race where the token could
+            // expire between a separate isTokenValid() call and extractSubject(),
+            // which would previously throw an uncaught ExpiredJwtException → 500.
+            String identifier = null;
+            try {
+                Claims claims = jwtUtil.parseClaimsOrNull(token);
+                if (claims != null) {
+                    identifier = claims.getSubject();
+                }
+            } catch (JwtException | IllegalArgumentException ignored) {
+                // Invalid token — leave identifier null, skip authentication.
+            }
 
+            if (identifier != null) {
                 try {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(identifier);
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/use-auth'
 import ChangePasswordModal from '../components/ChangePasswordModal'
@@ -58,6 +58,10 @@ export default function ProfilePage() {
     navigate('/login', { replace: true })
   }
 
+  // Stable identity so ChangePasswordModal's focus/close effect does not re-run
+  // while the modal is open (the modal effect depends on `onClose`).
+  const handleCloseChangePassword = useCallback(() => setChangeOpen(false), [])
+
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
 
   return (
@@ -109,7 +113,7 @@ export default function ProfilePage() {
         </section>
       </div>
 
-      <ChangePasswordModal open={changeOpen} onClose={() => setChangeOpen(false)} onSuccess={handlePasswordChanged} />
+      <ChangePasswordModal open={changeOpen} onClose={handleCloseChangePassword} onSuccess={handlePasswordChanged} />
     </>
   )
 }

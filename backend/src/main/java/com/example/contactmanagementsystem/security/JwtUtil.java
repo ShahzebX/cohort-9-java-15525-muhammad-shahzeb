@@ -1,5 +1,6 @@
 package com.example.contactmanagementsystem.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -42,15 +43,22 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    public boolean isTokenValid(String token) {
+    /**
+     * Parse and verify the token in a single call, returning the Claims on
+     * success or null if the token is invalid, expired, or malformed.
+     * Callers must not make a separate validity check before calling this
+     * method — doing so introduces a race window if the token expires between
+     * the two calls.
+     */
+    public Claims parseClaimsOrNull(String token) {
         try {
-            Jwts.parser()
+            return Jwts.parser()
                     .verifyWith(signingKey)
                     .build()
-                    .parseSignedClaims(token);
-            return true;
+                    .parseSignedClaims(token)
+                    .getPayload();
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            return null;
         }
     }
 }

@@ -24,6 +24,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -120,10 +121,13 @@ class ContactControllerTest {
 
     @Test
     void deleteContact_shouldReturn200() throws Exception {
-        when(userService.findByEmailOrPhone("test@example.com")).thenReturn(mockUser());
+        User user = mockUser();
+        when(userService.findByEmailOrPhone("test@example.com")).thenReturn(user);
 
         mockMvc.perform(delete("/api/contacts/1").principal(auth()))
                 .andExpect(status().isOk());
+
+        verify(contactService).deleteContact(1, user);
     }
 
     @Test

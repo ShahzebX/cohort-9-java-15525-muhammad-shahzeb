@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getContactsPage, searchContacts } from "../api/contacts";
 import Alert from "../components/Alert";
+import ContactFormModal from "../components/ContactFormModal";
+import DeleteContactModal from "../components/DeleteContactModal";
 import { getApiError } from "../lib/errors";
 
 const PAGE_SIZE = 10;
@@ -38,6 +40,22 @@ function ContactRow({ contact, onEdit, onDelete }) {
           ))}
         </div>
       )}
+      <div className="contact-row-actions">
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => onEdit(contact)}
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm contact-delete-btn"
+          onClick={() => onDelete(contact)}
+        >
+          Delete
+        </button>
+      </div>
     </li>
   );
 }
@@ -135,6 +153,61 @@ export default function ContactsPage() {
     setPage(nextPage);
   }
 
+  function showBanner(message) {
+    setBanner(message);
+    if (bannerTimerRef.current) {
+      window.clearTimeout(bannerTimerRef.current);
+    }
+    bannerTimerRef.current = window.setTimeout(() => setBanner(null), 4000);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (bannerTimerRef.current) {
+        window.clearTimeout(bannerTimerRef.current);
+      }
+    };
+  }, []);
+
+  function handleOpenCreate() {
+    setFormMode("create");
+    setFormContact(null);
+    setFormOpen(true);
+  }
+
+  function handleEdit(contact) {
+    setFormMode("edit");
+    setFormContact(contact);
+    setFormOpen(true);
+  }
+
+  function handleDeleteClick(contact) {
+    setDeleteContact(contact);
+    setDeleteOpen(true);
+  }
+
+  function handleFormClosed() {
+    setFormOpen(false);
+  }
+
+  function handleFormSaved() {
+    setFormOpen(false);
+    setReloadToken((value) => value + 1);
+    showBanner("Contact saved.");
+  }
+
+  function handleDeleteClosed() {
+    setDeleteOpen(false);
+  }
+
+  function handleDeleteConfirmed() {
+    setDeleteOpen(false);
+    setDeleteContact(null);
+    setPage(0);
+    setReloadToken((value) => value + 1);
+    showBanner("Contact deleted.");
+  }
+
   const contacts = searching ? (results ?? []) : (pageData?.content ?? []);
   const hasContacts = contacts.length > 0;
   const currentPage = pageData?.totalPages > 0 ? pageData.number + 1 : 0;
@@ -167,6 +240,9 @@ export default function ContactsPage() {
             onChange={handleQueryChange}
           />
         </label>
+        <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
+          New contact
+        </button>
       </div>
 
       {banner && (
@@ -247,11 +323,24 @@ export default function ContactsPage() {
           </span>
           <h2 className="empty-state-title">No contacts yet</h2>
           <p className="empty-state-text">
-            Contacts you add will appear here. The create form is coming in the
-            next iteration.
+            Add your first contact with the “New contact” button above.
           </p>
         </div>
       )}
+
+      <ContactFormModal
+        open={formOpen}
+        mode={formMode}
+        contact={formContact}
+        onClose={handleFormClosed}
+        onSaved={handleFormSaved}
+      />
+      <DeleteContactModal
+        open={deleteOpen}
+        contact={deleteContact}
+        onClose={handleDeleteClosed}
+        onDeleted={handleDeleteConfirmed}
+      />
     </>
   );
 }

@@ -181,4 +181,14 @@ class AuthControllerTest {
                                 "test@example.com", null)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void login_shouldReturn400OnMalformedJson() throws Exception {
+        // An unterminated string produces HttpMessageNotReadableException.
+        // The dedicated handler in GlobalExceptionHandler must return 400, not 500.
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identifier\":\"test@example.com\",\"password\":"))
+                .andExpect(status().isBadRequest());
+    }
 }

@@ -58,11 +58,26 @@ public class UserService {
         if (noPhone && noEmail)
             throw new IllegalArgumentException("User must register using either Email or Phone");
 
-        if (!noPhone && userRepository.findByPhone(user.getPhone()).isPresent())
-            throw new DuplicateResourceException("Phone already in use: " + user.getPhone());
+        // Email and phone share ONE normalized, globally unique login-identifier
+        // namespace. A new registrant's identifier must not collide with an
+        // existing user's email OR phone, otherwise findByEmailOrPhone() could
+        // resolve the wrong (conflicting) account at login. Each check therefore
+        // looks across BOTH the email and phone columns of existing users.
+        if (!noEmail) {
+            String email = user.getEmail();
+            boolean emailTaken = userRepository.findByEmail(email).isPresent()
+                    || userRepository.findByPhone(email).isPresent();
+            if (emailTaken)
+                throw new DuplicateResourceException("Email already in use: " + email);
+        }
 
-        if (!noEmail && userRepository.findByEmail(user.getEmail()).isPresent())
-            throw new DuplicateResourceException("Email already in use: " + user.getEmail());
+        if (!noPhone) {
+            String phone = user.getPhone();
+            boolean phoneTaken = userRepository.findByPhone(phone).isPresent()
+                    || userRepository.findByEmail(phone).isPresent();
+            if (phoneTaken)
+                throw new DuplicateResourceException("Phone already in use: " + phone);
+        }
 
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
 

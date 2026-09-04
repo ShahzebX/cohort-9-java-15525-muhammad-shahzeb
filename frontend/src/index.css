@@ -76,6 +76,7 @@
 
     --danger: #ff8a86;
     --danger-bg: #3a2223;
+    --btn-danger-bg: #7a1f1d;
     --success: #7fb57f;
     --success-bg: #1f2b20;
     --info: #6cb4e4;
@@ -277,7 +278,7 @@ button {
 }
 
 .input::placeholder {
-  color: var(--text-ghost);
+  color: var(--text-secondary);
 }
 
 .input:focus {

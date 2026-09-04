@@ -34,6 +34,7 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
   const firstNameRef = useRef(null)
 
   useEffect(() => {
@@ -45,7 +46,7 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
     }, 10)
 
     function handleKeyDown(event) {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !submittingRef.current) {
         onClose()
       }
     }
@@ -114,10 +115,10 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
       title: title.trim(),
       emails: emails
         .map(({ email, label }) => ({ email: email.trim(), label: label.trim() }))
-        .filter((item) => item.email || item.label),
+        .filter((item) => item.email),
       phones: phones
         .map(({ phoneNumber, label }) => ({ phoneNumber: phoneNumber.trim(), label: label.trim() }))
-        .filter((item) => item.phoneNumber || item.label),
+        .filter((item) => item.phoneNumber),
     }
   }
 
@@ -131,6 +132,7 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
 
     const payload = buildPayload()
     setSubmitting(true)
+    submittingRef.current = true
     try {
       if (mode === 'edit' && contact) {
         await updateContact(contact.id, payload)
@@ -142,6 +144,7 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
       setFormError(getApiError(error))
     } finally {
       setSubmitting(false)
+      submittingRef.current = false
     }
   }
 
@@ -236,11 +239,11 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
                         Remove
                       </button>
                     </div>
+                    {errors[`email-${index}`] && (
+                      <p className="field-error">{errors[`email-${index}`]}</p>
+                    )}
                   </div>
                 ))}
-                {errors[`email-0`] && (
-                  <p className="field-error">{errors[`email-0`]}</p>
-                )}
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm contact-add-btn"
@@ -282,11 +285,11 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
                         Remove
                       </button>
                     </div>
+                    {errors[`phone-${index}`] && (
+                      <p className="field-error">{errors[`phone-${index}`]}</p>
+                    )}
                   </div>
                 ))}
-                {errors[`phone-0`] && (
-                  <p className="field-error">{errors[`phone-0`]}</p>
-                )}
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm contact-add-btn"
