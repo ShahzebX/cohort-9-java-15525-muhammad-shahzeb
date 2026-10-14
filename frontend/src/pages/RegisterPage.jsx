@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/use-auth'
+import { useToast } from '../context/use-toast'
 import { getApiError } from '../lib/errors'
 import { validateRegistration } from '../lib/validators'
 import TextField from '../components/TextField'
-import Alert from '../components/Alert'
 
 export default function RegisterPage() {
   const { register } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
 
   const [firstName, setFirstName] = useState('')
@@ -17,7 +18,6 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState({})
-  const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const firstNameRef = useRef(null)
 
@@ -37,18 +37,19 @@ export default function RegisterPage() {
     }
     const validation = validateRegistration(payload)
     setErrors(validation.errors)
-    setFormError(null)
     if (!validation.valid) return
 
     setSubmitting(true)
     try {
       // Omit confirmPassword — it is a UI validation field only and is not
       // declared on the backend RegisterRequest DTO.
-      const { confirmPassword: _cp, ...registrationPayload } = payload
+      const registrationPayload = { ...payload }
+      delete registrationPayload.confirmPassword
       await register(registrationPayload)
+      toast.success('Account created.')
       navigate('/contacts', { replace: true })
     } catch (error) {
-      setFormError(getApiError(error))
+      toast.error(getApiError(error))
     } finally {
       setSubmitting(false)
     }
@@ -68,7 +69,6 @@ export default function RegisterPage() {
         <p className="auth-subtitle">Register with an email, a phone number, or both.</p>
 
         <form className="form" onSubmit={handleSubmit} noValidate>
-          {formError && <Alert variant="error" className="form-error">{formError}</Alert>}
           <TextField
             label="First name"
             type="text"

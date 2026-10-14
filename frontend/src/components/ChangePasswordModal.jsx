@@ -1,19 +1,32 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { changePassword } from '../api/auth'
+import { useToast } from '../context/use-toast'
 import { getApiError } from '../lib/errors'
 import { validateChangePassword } from '../lib/validators'
 import TextField from './TextField'
-import Alert from './Alert'
 
 export default function ChangePasswordModal({ open, onClose, onSuccess }) {
+  const toast = useToast()
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState({})
-  const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const submittingRef = useRef(false)
   const oldPasswordRef = useRef(null)
+
+  const resetFields = useCallback(() => {
+    setOldPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setErrors({})
+  }, [])
+
+  const handleClose = useCallback(() => {
+    if (submittingRef.current) return
+    resetFields()
+    onClose()
+  }, [resetFields, onClose])
 
   useEffect(() => {
     if (!open) return undefined
@@ -75,23 +88,14 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
         previouslyFocused.focus()
       }
     }
-  }, [open, onClose])
+  }, [open, handleClose])
 
   if (!open) return null
-
-  function resetFields() {
-    setOldPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-    setErrors({})
-    setFormError(null)
-  }
 
   async function handleSubmit(event) {
     event.preventDefault()
     const validation = validateChangePassword({ oldPassword, newPassword, confirmPassword })
     setErrors(validation.errors)
-    setFormError(null)
     if (!validation.valid) return
 
     setSubmitting(true)
@@ -101,17 +105,11 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
       resetFields()
       onSuccess()
     } catch (error) {
-      setFormError(getApiError(error))
+      toast.error(getApiError(error))
     } finally {
       setSubmitting(false)
       submittingRef.current = false
     }
-  }
-
-  function handleClose() {
-    if (submittingRef.current) return
-    resetFields()
-    onClose()
   }
 
   return (
@@ -144,8 +142,7 @@ export default function ChangePasswordModal({ open, onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="modal-body">
-            {formError && <Alert variant="error">{formError}</Alert>}
-            <div className={`modal-stack${formError ? ' modal-stack-with-error' : ''}`}>
+            <div className="modal-stack">
               <TextField
                 label="Current password"
                 type="password"

@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { getContactsPage, searchContacts } from "../api/contacts";
 import Alert from "../components/Alert";
 import ContactFormModal from "../components/ContactFormModal";
 import DeleteContactModal from "../components/DeleteContactModal";
+import { useToast } from "../context/use-toast";
 import { getApiError } from "../lib/errors";
 
 const PAGE_SIZE = 10;
@@ -61,6 +62,7 @@ function ContactRow({ contact, onEdit, onDelete }) {
 }
 
 export default function ContactsPage() {
+  const toast = useToast();
   const [pageData, setPageData] = useState(null);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -79,8 +81,6 @@ export default function ContactsPage() {
   const [formSession, setFormSession] = useState(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteContact, setDeleteContact] = useState(null);
-  const [banner, setBanner] = useState(null);
-  const bannerTimerRef = useRef(null);
 
   const searching = debouncedQuery.trim().length > 0;
 
@@ -156,22 +156,6 @@ export default function ContactsPage() {
     setPage(nextPage);
   }
 
-  function showBanner(message) {
-    setBanner(message);
-    if (bannerTimerRef.current) {
-      window.clearTimeout(bannerTimerRef.current);
-    }
-    bannerTimerRef.current = window.setTimeout(() => setBanner(null), 4000);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (bannerTimerRef.current) {
-        window.clearTimeout(bannerTimerRef.current);
-      }
-    };
-  }, []);
-
   function handleOpenCreate() {
     setFormMode("create");
     setFormContact(null);
@@ -198,7 +182,7 @@ export default function ContactsPage() {
   function handleFormSaved() {
     setFormOpen(false);
     setReloadToken((value) => value + 1);
-    showBanner("Contact saved.");
+    toast.success("Contact saved.");
   }
 
   function handleDeleteClosed() {
@@ -210,7 +194,7 @@ export default function ContactsPage() {
     setDeleteContact(null);
     setPage(0);
     setReloadToken((value) => value + 1);
-    showBanner("Contact deleted.");
+    toast.success("Contact deleted.");
   }
 
   const contacts = searching ? (results ?? []) : (pageData?.content ?? []);
@@ -245,16 +229,14 @@ export default function ContactsPage() {
             onChange={handleQueryChange}
           />
         </label>
-        <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleOpenCreate}
+        >
           New contact
         </button>
       </div>
-
-      {banner && (
-        <div className="banner-wrap">
-          <Alert variant="success">{banner}</Alert>
-        </div>
-      )}
 
       {error && (
         <div className="banner-wrap">

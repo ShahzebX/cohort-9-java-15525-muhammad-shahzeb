@@ -71,6 +71,8 @@ class UserServiceTest {
 
     @Test
     void registerUser_shouldThrowWhenPhoneExists() {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByPhone("test@example.com")).thenReturn(Optional.empty());
         when(userRepository.findByPhone("1234567890")).thenReturn(Optional.of(user));
 
         assertThrows(DuplicateResourceException.class, () -> userService.registerUser(user));
@@ -78,7 +80,6 @@ class UserServiceTest {
 
     @Test
     void registerUser_shouldThrowWhenEmailExists() {
-        when(userRepository.findByPhone(any())).thenReturn(Optional.empty());
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
 
         assertThrows(DuplicateResourceException.class, () -> userService.registerUser(user));

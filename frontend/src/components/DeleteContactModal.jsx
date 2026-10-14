@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { deleteContact } from '../api/contacts'
+import { useToast } from '../context/use-toast'
 import { getApiError } from '../lib/errors'
-import Alert from './Alert'
 
 export default function DeleteContactModal({ open, contact = null, onClose, onDeleted }) {
-  const [formError, setFormError] = useState(null)
+  const toast = useToast()
   const [submitting, setSubmitting] = useState(false)
   const submittingRef = useRef(false)
   const cancelRef = useRef(null)
@@ -14,7 +14,6 @@ export default function DeleteContactModal({ open, contact = null, onClose, onDe
 
     const previouslyFocused = document.activeElement
     const focusTimer = window.setTimeout(() => {
-      setFormError(null)
       cancelRef.current?.focus()
     }, 10)
 
@@ -39,14 +38,13 @@ export default function DeleteContactModal({ open, contact = null, onClose, onDe
 
   async function handleDelete() {
     if (!contact) return
-    setFormError(null)
     setSubmitting(true)
     submittingRef.current = true
     try {
       await deleteContact(contact.id)
       onDeleted()
     } catch (error) {
-      setFormError(getApiError(error))
+      toast.error(getApiError(error))
     } finally {
       setSubmitting(false)
       submittingRef.current = false
@@ -87,7 +85,6 @@ export default function DeleteContactModal({ open, contact = null, onClose, onDe
         </div>
 
         <div className="modal-body">
-          {formError && <Alert variant="error">{formError}</Alert>}
           <p className="text-muted">
             Are you sure you want to delete “{fullName}”? This cannot be undone.
           </p>

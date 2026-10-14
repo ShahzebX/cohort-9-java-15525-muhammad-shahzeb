@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createContact, updateContact } from '../api/contacts'
+import { useToast } from '../context/use-toast'
 import { getApiError } from '../lib/errors'
 import { isValidEmail, isValidPhone } from '../lib/validators'
 import TextField from './TextField'
-import Alert from './Alert'
 
 function emptyEmail() {
   return { email: '', label: '' }
@@ -14,6 +14,7 @@ function emptyPhone() {
 }
 
 function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSaved }) {
+  const toast = useToast()
   const [firstName, setFirstName] = useState(contact?.firstName ?? '')
   const [lastName, setLastName] = useState(contact?.lastName ?? '')
   const [title, setTitle] = useState(contact?.title ?? '')
@@ -32,7 +33,6 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
     }))
   )
   const [errors, setErrors] = useState({})
-  const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const submittingRef = useRef(false)
   const firstNameRef = useRef(null)
@@ -127,7 +127,6 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
 
     const nextErrors = validate()
     setErrors(nextErrors)
-    setFormError(null)
     if (Object.keys(nextErrors).length > 0) return
 
     const payload = buildPayload()
@@ -141,7 +140,7 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
       }
       onSaved()
     } catch (error) {
-      setFormError(getApiError(error))
+      toast.error(getApiError(error))
     } finally {
       setSubmitting(false)
       submittingRef.current = false
@@ -185,8 +184,7 @@ function ContactFormModal({ open, mode = 'create', contact = null, onClose, onSa
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="modal-body">
-            {formError && <Alert variant="error">{formError}</Alert>}
-            <div className={`modal-stack${formError ? ' modal-stack-with-error' : ''}`}>
+            <div className="modal-stack">
               <TextField
                 label="First name"
                 value={firstName}

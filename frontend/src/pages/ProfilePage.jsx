@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/use-auth'
+import { useToast } from '../context/use-toast'
 import ChangePasswordModal from '../components/ChangePasswordModal'
-import Alert from '../components/Alert'
 
 function getInitials(user) {
   const firstName = user?.firstName ?? ''
@@ -27,30 +27,13 @@ function DetailRow({ label, value }) {
 
 export default function ProfilePage() {
   const { user, logout } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const [changeOpen, setChangeOpen] = useState(false)
-  const [banner, setBanner] = useState(null)
-  const bannerTimerRef = useRef(null)
-
-  useEffect(() => {
-    return () => {
-      if (bannerTimerRef.current) {
-        window.clearTimeout(bannerTimerRef.current)
-      }
-    }
-  }, [])
-
-  function showBanner(message) {
-    setBanner(message)
-    if (bannerTimerRef.current) {
-      window.clearTimeout(bannerTimerRef.current)
-    }
-    bannerTimerRef.current = window.setTimeout(() => setBanner(null), 4000)
-  }
 
   function handlePasswordChanged() {
     setChangeOpen(false)
-    showBanner('Your password has been updated.')
+    toast.success('Your password has been updated.')
   }
 
   function handleLogout() {
@@ -72,12 +55,6 @@ export default function ProfilePage() {
           <p className="page-desc">Manage your account details and security.</p>
         </div>
       </div>
-
-      {banner && (
-        <div className="banner-wrap">
-          <Alert variant="success">{banner}</Alert>
-        </div>
-      )}
 
       <div className="profile-grid">
         <section className="card" aria-label="Account details">

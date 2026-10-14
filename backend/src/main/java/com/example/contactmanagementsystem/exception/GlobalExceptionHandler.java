@@ -1,4 +1,4 @@
-package com.example.contactmanagementsystem;
+package com.example.contactmanagementsystem.exception;
 
 import com.example.exception.DuplicateResourceException;
 import com.example.exception.InvalidCredentialsException;

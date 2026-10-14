@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/use-auth'
+import { useToast } from '../context/use-toast'
 import { getApiError } from '../lib/errors'
 import { validateLogin } from '../lib/validators'
 import TextField from '../components/TextField'
-import Alert from '../components/Alert'
 
 export default function LoginPage() {
   const { login } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
 
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
-  const [formError, setFormError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const identifierRef = useRef(null)
 
@@ -28,15 +28,15 @@ export default function LoginPage() {
     event.preventDefault()
     const validation = validateLogin({ identifier, password })
     setErrors(validation.errors)
-    setFormError(null)
     if (!validation.valid) return
 
     setSubmitting(true)
     try {
       await login({ identifier: identifier.trim(), password })
+      toast.success('Signed in.')
       navigate(from, { replace: true })
     } catch (error) {
-      setFormError(getApiError(error))
+      toast.error(getApiError(error))
     } finally {
       setSubmitting(false)
     }
@@ -56,7 +56,6 @@ export default function LoginPage() {
         <p className="auth-subtitle">Use your email or phone number to continue.</p>
 
         <form className="form" onSubmit={handleSubmit} noValidate>
-          {formError && <Alert variant="error" className="form-error">{formError}</Alert>}
           <TextField
             label="Email or phone"
             type="text"

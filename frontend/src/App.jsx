@@ -1,9 +1,9 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { GuestRoute, ProtectedRoute } from './components/ProtectedRoute'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import ProfilePage from './pages/ProfilePage'
-import ContactsPage from './pages/ContactsPage'
+import { Navigate, Route, Routes } from "react-router-dom";
+import { GuestRoute, ProtectedRoute } from "./components/ProtectedRoute";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
+import ContactsPage from "./pages/ContactsPage";
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
       <Route path="/" element={<Navigate to="/contacts" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
